@@ -10,7 +10,7 @@ struct Tet {
 }
 
 impl Tet {
-    fn new() -> Tet {
+    fn new_line() -> Tet {
         Tet {
             pos: [
                 5, 0
@@ -27,6 +27,24 @@ impl Tet {
             rot: 0,
         }
     }
+
+    fn new_l() -> Tet {
+        Tet {
+            pos: [
+                5, 0
+            ],
+            pivot: [
+                0, 2
+            ],
+            model: [
+                [0, 0],
+                [0, 1],
+                [0, 2],
+                [1, 2]
+            ],
+            rot: 0,
+        }
+    }
 }
 
 fn main() {
@@ -36,15 +54,15 @@ fn main() {
     setup(H as u16, W as u16, &cursor);
 
     let mut occupied: Vec<[i16; 2]> = Vec::new();
-    let mut tet = Tet::new();
+    let mut tet = Tet::new_l();
     let mut time = SystemTime::now();
 
     loop {
         // Auto fall
         if time.elapsed().unwrap().as_secs() >= 1 {
-            if collision_check(&tet, &H, &occupied, 0, -1) {
+            if collision_check(&tet, H, W, &occupied, 0, -1) {
                 place_tet(&tet, &mut occupied);
-                tet = Tet::new();
+                tet = Tet::new_l();
             }
 
             move_tet(&mut tet, &cursor, 0, 1);
@@ -55,21 +73,21 @@ fn main() {
         if poll(Duration::from_secs(0)).unwrap() {
             let event = crossterm::event::read().unwrap();
 
-            if tet.pos[0] > 0 && event == Event::Key(KeyEvent::new_with_kind(KeyCode::Left, KeyModifiers::NONE, KeyEventKind::Press)) {
-                if !collision_check(&tet, &H, &occupied, 1, 0) {
+            if event == Event::Key(KeyEvent::new_with_kind(KeyCode::Left, KeyModifiers::NONE, KeyEventKind::Press)) {
+                if !collision_check(&tet, H, W, &occupied, 1, 0) {
                     move_tet(&mut tet, &cursor, -1, 0);
                 }
-            } else if tet.pos[0] < W && event == Event::Key(KeyEvent::new_with_kind(KeyCode::Right, KeyModifiers::NONE, KeyEventKind::Press)) {
-                if !collision_check(&tet, &H, &occupied, -1, 0) {
+            } else if event == Event::Key(KeyEvent::new_with_kind(KeyCode::Right, KeyModifiers::NONE, KeyEventKind::Press)) {
+                if !collision_check(&tet, H, W, &occupied, -1, 0) {
                     move_tet(&mut tet, &cursor, 1, 0);
                 }
             } else if event == Event::Key(KeyEvent::new_with_kind(KeyCode::Down, KeyModifiers::NONE, KeyEventKind::Press)) {
-                if !collision_check(&tet, &H, &occupied, 0, -1) {
+                if !collision_check(&tet, H, W, &occupied, 0, -1) {
                     move_tet(&mut tet, &cursor, 0, 1);
                 }
-                if collision_check(&tet, &H, &occupied, 0, -1) {
+                if collision_check(&tet, H, W, &occupied, 0, -1) {
                     place_tet(&tet, &mut occupied);
-                    tet = Tet::new();
+                    tet = Tet::new_l();
                 }
                 time = SystemTime::now();
             }
@@ -116,20 +134,21 @@ fn print_tet(tet: &mut Tet, cursor: &TerminalCursor, remove: bool) {
             print!(".");
         } else {
             print!("■");
-            // DEBUG for printing pivot point
-            if y == tet.pos[1] {
-                cursor.goto((pos[0] + tet.model[i][0]) as u16, y as u16).unwrap();
-                print!("X");
-            }
         }
     }
 }
 
-fn collision_check(tet: &Tet, h: &i16, occupied: &Vec<[i16; 2]>, x: i16, y: i16) -> bool {
+fn collision_check(tet: &Tet, h: i16, w: i16, occupied: &Vec<[i16; 2]>, x: i16, y: i16) -> bool {
     let pos = tet_pos(&tet);
     for i in 0..=3 {
         let point = tet.model[i];
-        if point[1] + pos[1] == h - 1 {
+        if y != 0 && point[1] + pos[1] == h + y {
+            return true;
+        }
+
+        if x < 0 && point[0] + pos[0] == w {
+            return true;
+        } else if x > 0 && point[0] + pos[0] == 0 {
             return true;
         }
 
