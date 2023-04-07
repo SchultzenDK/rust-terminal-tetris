@@ -1,6 +1,5 @@
-use std::{time::{SystemTime, Duration}};
-use crossterm::event::{poll, Event, KeyEvent, KeyCode, KeyModifiers, KeyEventKind};
-use crossterm_cursor::TerminalCursor;
+use std::{time::{SystemTime, Duration}, io::stdout};
+use crossterm::{event::{poll, Event, KeyEvent, KeyCode, KeyModifiers, KeyEventKind}, cursor::{MoveTo, Hide}, ExecutableCommand, terminal};
 
 struct Tet {
     pos: [i16; 2],
@@ -50,8 +49,7 @@ impl Tet {
 fn main() {
     const H:i16 = 20;
     const W:i16 = 10;
-    let cursor = TerminalCursor::new();
-    setup(H as u16, W as u16, &cursor);
+    setup(H as u16, W as u16);
 
     let mut occupied: Vec<[i16; 2]> = Vec::new();
     let mut tet = Tet::new_l();
@@ -65,7 +63,7 @@ fn main() {
                 tet = Tet::new_l();
             }
 
-            move_tet(&mut tet, &cursor, 0, 1);
+            move_tet(&mut tet, 0, 1);
             time = SystemTime::now();
         }
 
@@ -75,15 +73,15 @@ fn main() {
 
             if event == Event::Key(KeyEvent::new_with_kind(KeyCode::Left, KeyModifiers::NONE, KeyEventKind::Press)) {
                 if !collision_check(&tet, H, W, &occupied, 1, 0) {
-                    move_tet(&mut tet, &cursor, -1, 0);
+                    move_tet(&mut tet, -1, 0);
                 }
             } else if event == Event::Key(KeyEvent::new_with_kind(KeyCode::Right, KeyModifiers::NONE, KeyEventKind::Press)) {
                 if !collision_check(&tet, H, W, &occupied, -1, 0) {
-                    move_tet(&mut tet, &cursor, 1, 0);
+                    move_tet(&mut tet, 1, 0);
                 }
             } else if event == Event::Key(KeyEvent::new_with_kind(KeyCode::Down, KeyModifiers::NONE, KeyEventKind::Press)) {
                 if !collision_check(&tet, H, W, &occupied, 0, -1) {
-                    move_tet(&mut tet, &cursor, 0, 1);
+                    move_tet(&mut tet, 0, 1);
                 }
                 if collision_check(&tet, H, W, &occupied, 0, -1) {
                     place_tet(&tet, &mut occupied);
@@ -92,16 +90,14 @@ fn main() {
                 time = SystemTime::now();
             }
         }
-
-        cursor.goto(0, 0).unwrap();
     }
 }
 
-fn setup(h: u16, w: u16, cursor: &TerminalCursor) {
-    cursor.hide().unwrap();
-    cursor.goto(0, 0).unwrap();
+fn setup(h: u16, w: u16) {
+    stdout().execute(Hide).unwrap();
+    move_cursor(0, 0);
 
-    let term_size = crossterm::terminal::size().unwrap();
+    let term_size = terminal::size().unwrap();
 
     for i in 0..term_size.1 {
         for j in 0..term_size.0 {
@@ -115,26 +111,33 @@ fn setup(h: u16, w: u16, cursor: &TerminalCursor) {
     }
 }
 
-fn move_tet(tet: &mut Tet, cursor: &TerminalCursor, x: i16, y: i16) {
-    print_tet(tet, cursor, true);
+fn move_tet(tet: &mut Tet, x: i16, y: i16) {
+    print_tet(tet, true);
     tet.pos[0] += x;
     tet.pos[1] += y;
-    print_tet(tet, cursor, false);
+    print_tet(tet, false);
 }
 
-fn print_tet(tet: &mut Tet, cursor: &TerminalCursor, remove: bool) {
+fn print_tet(tet: &mut Tet, remove: bool) {
     let pos = tet_pos(&tet);
     for i in 0..=3 {
         let y: i16 = pos[1] + tet.model[i][1];
         if y < 0 {
             continue;
         }
-        cursor.goto((pos[0] + tet.model[i][0]) as u16, y as u16).unwrap();
+
+        move_cursor(
+            (pos[0] + tet.model[i][0]) as u16,
+            y as u16
+        );
+
         if remove {
             print!(".");
         } else {
             print!("■");
         }
+
+        move_cursor(0, 0);
     }
 }
 
@@ -171,4 +174,8 @@ fn place_tet(tet: &Tet, occupied: &mut Vec<[i16; 2]>) {
     for i in 0..=3 {
         occupied.push([pos[0] + tet.model[i][0], pos[1] + tet.model[i][1]]);
     }
+}
+
+fn move_cursor(x: u16, y: u16) {
+    stdout().execute(MoveTo(x, y)).unwrap();
 }
