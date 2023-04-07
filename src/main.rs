@@ -40,33 +40,40 @@ fn main() {
     let mut time = SystemTime::now();
 
     loop {
-        let dur = time.elapsed().unwrap();
-        if dur.as_secs() >= 1 {
+        // Auto fall
+        if time.elapsed().unwrap().as_secs() >= 1 {
+            if collision_check(&tet, &H, &occupied, 0, -1) {
+                place_tet(&tet, &mut occupied);
+                tet = Tet::new();
+            }
+
             move_tet(&mut tet, &cursor, 0, 1);
             time = SystemTime::now();
         }
 
+        // Controls
         if poll(Duration::from_secs(0)).unwrap() {
             let event = crossterm::event::read().unwrap();
 
             if tet.pos[0] > 0 && event == Event::Key(KeyEvent::new_with_kind(KeyCode::Left, KeyModifiers::NONE, KeyEventKind::Press)) {
-                move_tet(&mut tet, &cursor, -1, 0);
+                if !collision_check(&tet, &H, &occupied, 1, 0) {
+                    move_tet(&mut tet, &cursor, -1, 0);
+                }
             } else if tet.pos[0] < W && event == Event::Key(KeyEvent::new_with_kind(KeyCode::Right, KeyModifiers::NONE, KeyEventKind::Press)) {
-                move_tet(&mut tet, &cursor, 1, 0);
+                if !collision_check(&tet, &H, &occupied, -1, 0) {
+                    move_tet(&mut tet, &cursor, 1, 0);
+                }
             } else if event == Event::Key(KeyEvent::new_with_kind(KeyCode::Down, KeyModifiers::NONE, KeyEventKind::Press)) {
-                move_tet(&mut tet, &cursor, 0, 1);
+                if !collision_check(&tet, &H, &occupied, 0, -1) {
+                    move_tet(&mut tet, &cursor, 0, 1);
+                }
+                if collision_check(&tet, &H, &occupied, 0, -1) {
+                    place_tet(&tet, &mut occupied);
+                    tet = Tet::new();
+                }
                 time = SystemTime::now();
             }
         }
-
-        if below_collision(&tet, &H, &occupied) {
-            let pos = tet_pos(&tet);
-            for i in 0..=3 {
-                occupied.push([pos[0] + tet.model[i][0], pos[1] + tet.model[i][1]]);
-            }
-            tet = Tet::new();
-        }
-
 
         cursor.goto(0, 0).unwrap();
     }
@@ -118,7 +125,7 @@ fn print_tet(tet: &mut Tet, cursor: &TerminalCursor, remove: bool) {
     }
 }
 
-fn below_collision(tet: &Tet, h: &i16, occupied: &Vec<[i16; 2]>) -> bool {
+fn collision_check(tet: &Tet, h: &i16, occupied: &Vec<[i16; 2]>, x: i16, y: i16) -> bool {
     let pos = tet_pos(&tet);
     for i in 0..=3 {
         let point = tet.model[i];
@@ -127,7 +134,7 @@ fn below_collision(tet: &Tet, h: &i16, occupied: &Vec<[i16; 2]>) -> bool {
         }
 
         for occ in occupied {
-            if point[0] + pos[0] == occ[0] && point[1] + pos[1] == occ[1] - 1 {
+            if point[0] + pos[0] == occ[0] + x && point[1] + pos[1] == occ[1] + y {
                 return true;
             }
         }
@@ -138,4 +145,11 @@ fn below_collision(tet: &Tet, h: &i16, occupied: &Vec<[i16; 2]>) -> bool {
 
 fn tet_pos(tet: &Tet) -> [i16; 2] {
     return [tet.pos[0] - tet.pivot[0], tet.pos[1] - tet.pivot[1]];
+}
+
+fn place_tet(tet: &Tet, occupied: &mut Vec<[i16; 2]>) {
+    let pos = tet_pos(&tet);
+    for i in 0..=3 {
+        occupied.push([pos[0] + tet.model[i][0], pos[1] + tet.model[i][1]]);
+    }
 }
