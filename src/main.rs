@@ -5,7 +5,6 @@ struct Tet {
     pos: [i16; 2],
     pivot: [i16; 2],
     model: [[i16; 2]; 4],
-    rot: u8,
 }
 
 impl Tet {
@@ -23,7 +22,6 @@ impl Tet {
                 [0, 2],
                 [0, 3]
             ],
-            rot: 0,
         }
     }
 
@@ -33,7 +31,7 @@ impl Tet {
                 5, 0
             ],
             pivot: [
-                0, 2
+                0, 1
             ],
             model: [
                 [0, 0],
@@ -41,7 +39,6 @@ impl Tet {
                 [0, 2],
                 [1, 2]
             ],
-            rot: 0,
         }
     }
 }
@@ -71,14 +68,17 @@ fn main() {
         if poll(Duration::from_secs(0)).unwrap() {
             let event = crossterm::event::read().unwrap();
 
+            // Move left
             if event == Event::Key(KeyEvent::new_with_kind(KeyCode::Left, KeyModifiers::NONE, KeyEventKind::Press)) {
                 if !collision_check(&tet, H, W, &occupied, 1, 0) {
                     move_tet(&mut tet, -1, 0);
                 }
+            // Move right
             } else if event == Event::Key(KeyEvent::new_with_kind(KeyCode::Right, KeyModifiers::NONE, KeyEventKind::Press)) {
                 if !collision_check(&tet, H, W, &occupied, -1, 0) {
                     move_tet(&mut tet, 1, 0);
                 }
+            // Move down
             } else if event == Event::Key(KeyEvent::new_with_kind(KeyCode::Down, KeyModifiers::NONE, KeyEventKind::Press)) {
                 if !collision_check(&tet, H, W, &occupied, 0, -1) {
                     move_tet(&mut tet, 0, 1);
@@ -88,6 +88,24 @@ fn main() {
                     tet = Tet::new_l();
                 }
                 time = SystemTime::now();
+            // Rotate left
+            } else if event == Event::Key(KeyEvent::new_with_kind(KeyCode::Up, KeyModifiers::NONE, KeyEventKind::Press)) {
+                // TODO: Handle collisions and rotating out of frame
+                print_tet(&mut tet, true);
+                for i in 0..=3 {
+                    let x = tet.model[i][0];
+                    let y = tet.model[i][1];
+
+                    tet.model[i][0] = y;
+                    tet.model[i][1] = -x;
+                }
+
+                let x = tet.pivot[0];
+                let y = tet.pivot[1];
+                tet.pivot[0] = y;
+                tet.pivot[1] = -x;
+
+                print_tet(&mut tet, false);
             }
         }
     }
