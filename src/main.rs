@@ -1,5 +1,6 @@
 use std::{time::{SystemTime, Duration}, io::stdout};
 use crossterm::{event::{poll, Event, KeyEvent, KeyCode, KeyModifiers, KeyEventKind}, cursor::{MoveTo, Hide}, ExecutableCommand, terminal};
+use rand::Rng;
 
 struct Tet {
     pos: [i16; 2],
@@ -8,7 +9,7 @@ struct Tet {
 }
 
 impl Tet {
-    fn new_line() -> Tet {
+    fn new_i() -> Tet {
         Tet {
             pos: [
                 5, 0
@@ -41,6 +42,104 @@ impl Tet {
             ],
         }
     }
+
+    fn new_j() -> Tet {
+        Tet {
+            pos: [
+                5, 0
+            ],
+            pivot: [
+                0, 1
+            ],
+            model: [
+                [0, 0],
+                [0, 1],
+                [0, 2],
+                [-1, 2],
+            ],
+        }
+    }
+
+    fn new_t() -> Tet {
+        Tet {
+            pos: [
+                5, 0
+            ],
+            pivot: [
+                1, 0
+            ],
+            model: [
+                [0, 0],
+                [1, 0],
+                [1, 1],
+                [2, 0],
+            ],
+        }
+    }
+
+    fn new_o() -> Tet {
+        Tet {
+            pos: [
+                5, 0
+            ],
+            pivot: [
+                0, 0
+            ],
+            model: [
+                [0, 0],
+                [1, 0],
+                [0, 1],
+                [1, 1],
+            ],
+        }
+    }
+
+    fn new_s() -> Tet {
+        Tet {
+            pos: [
+                5, 0
+            ],
+            pivot: [
+                1, 0
+            ],
+            model: [
+                [2, 1],
+                [1, 1],
+                [1, 0],
+                [0, 0],
+            ],
+        }
+    }
+
+    fn new_z() -> Tet {
+        Tet {
+            pos: [
+                5, 0
+            ],
+            pivot: [
+                1, 0
+            ],
+            model: [
+                [0, 1],
+                [1, 1],
+                [1, 0],
+                [2, 0],
+            ],
+        }
+    }
+
+    fn new_random() -> Tet {
+        let rnd = rand::thread_rng().gen_range(0..=5);
+        match rnd {
+            0 => return Tet::new_i(),
+            1 => return Tet::new_l(),
+            2 => return Tet::new_j(),
+            3 => return Tet::new_t(),
+            4 => return Tet::new_o(),
+            5 => return Tet::new_s(),
+            _ => return Tet::new_z(),
+        }
+    }
 }
 
 fn main() {
@@ -49,7 +148,7 @@ fn main() {
     setup(H as u16, W as u16);
 
     let mut occupied: Vec<[i16; 2]> = Vec::new();
-    let mut tet = Tet::new_l();
+    let mut tet = Tet::new_random();
     let mut time = SystemTime::now();
 
     loop {
@@ -57,7 +156,7 @@ fn main() {
         if time.elapsed().unwrap().as_secs() >= 1 {
             if collision_check(&tet, H, W, &occupied, 0, -1) {
                 place_tet(&tet, &mut occupied);
-                tet = Tet::new_l();
+                tet = Tet::new_random();
             }
 
             move_tet(&mut tet, 0, 1);
@@ -85,12 +184,13 @@ fn main() {
                 }
                 if collision_check(&tet, H, W, &occupied, 0, -1) {
                     place_tet(&tet, &mut occupied);
-                    tet = Tet::new_l();
+                    tet = Tet::new_random();
                 }
                 time = SystemTime::now();
             // Rotate left
             } else if event == Event::Key(KeyEvent::new_with_kind(KeyCode::Up, KeyModifiers::NONE, KeyEventKind::Press)) {
                 // TODO: Handle collisions and rotating out of frame
+                // TODO: Fix weird flipping on i, z, s, o
                 print_tet(&mut tet, true);
                 for i in 0..=3 {
                     let x = tet.model[i][0];
