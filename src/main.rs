@@ -142,10 +142,11 @@ impl Tet {
     }
 }
 
+static H:u16 = 20;
+static W:u16 = 10;
+
 fn main() {
-    const H:i16 = 20;
-    const W:i16 = 10;
-    setup(H as u16, W as u16);
+    setup();
 
     let mut occupied: Vec<[i16; 2]> = Vec::new();
     let mut tet = Tet::new_random();
@@ -154,7 +155,7 @@ fn main() {
     loop {
         // Auto fall
         if time.elapsed().unwrap().as_secs() >= 1 {
-            if collision_check(&tet, H, W, &occupied, 0, -1) {
+            if collision_check(&tet, &occupied, 0, -1) {
                 place_tet(&tet, &mut occupied);
                 tet = Tet::new_random();
             }
@@ -169,20 +170,20 @@ fn main() {
 
             // Move left
             if event == Event::Key(KeyEvent::new_with_kind(KeyCode::Left, KeyModifiers::NONE, KeyEventKind::Press)) {
-                if !collision_check(&tet, H, W, &occupied, 1, 0) {
+                if !collision_check(&tet, &occupied, 1, 0) {
                     move_tet(&mut tet, -1, 0);
                 }
             // Move right
             } else if event == Event::Key(KeyEvent::new_with_kind(KeyCode::Right, KeyModifiers::NONE, KeyEventKind::Press)) {
-                if !collision_check(&tet, H, W, &occupied, -1, 0) {
+                if !collision_check(&tet, &occupied, -1, 0) {
                     move_tet(&mut tet, 1, 0);
                 }
             // Move down
             } else if event == Event::Key(KeyEvent::new_with_kind(KeyCode::Down, KeyModifiers::NONE, KeyEventKind::Press)) {
-                if !collision_check(&tet, H, W, &occupied, 0, -1) {
+                if !collision_check(&tet, &occupied, 0, -1) {
                     move_tet(&mut tet, 0, 1);
                 }
-                if collision_check(&tet, H, W, &occupied, 0, -1) {
+                if collision_check(&tet, &occupied, 0, -1) {
                     place_tet(&tet, &mut occupied);
                     tet = Tet::new_random();
                 }
@@ -211,7 +212,7 @@ fn main() {
     }
 }
 
-fn setup(h: u16, w: u16) {
+fn setup() {
     stdout().execute(Hide).unwrap();
     move_cursor(0, 0);
 
@@ -219,7 +220,7 @@ fn setup(h: u16, w: u16) {
 
     for i in 0..term_size.1 {
         for j in 0..term_size.0 {
-            if j <= w && i <= h {
+            if j <= W && i <= H {
                 print!(".");
             } else {
                 print!(" ");
@@ -259,15 +260,15 @@ fn print_tet(tet: &mut Tet, remove: bool) {
     }
 }
 
-fn collision_check(tet: &Tet, h: i16, w: i16, occupied: &Vec<[i16; 2]>, x: i16, y: i16) -> bool {
+fn collision_check(tet: &Tet, occupied: &Vec<[i16; 2]>, x: i16, y: i16) -> bool {
     let pos = tet_pos(&tet);
     for i in 0..=3 {
         let point = tet.model[i];
-        if y != 0 && point[1] + pos[1] == h + y {
+        if y != 0 && point[1] + pos[1] == H as i16 + y {
             return true;
         }
 
-        if x < 0 && point[0] + pos[0] == w {
+        if x < 0 && point[0] + pos[0] == W as i16 {
             return true;
         } else if x > 0 && point[0] + pos[0] == 0 {
             return true;
