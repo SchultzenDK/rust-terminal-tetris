@@ -155,7 +155,7 @@ fn main() {
     loop {
         // Auto fall
         if time.elapsed().unwrap().as_secs() >= 1 {
-            if collision_check(&tet, &occupied, 0, -1) {
+            if collision_check(&tet, &occupied, 0, 1) {
                 place_tet(&tet, &mut occupied);
                 tet = Tet::new_random();
             }
@@ -170,27 +170,26 @@ fn main() {
 
             // Move left
             if event == Event::Key(KeyEvent::new_with_kind(KeyCode::Left, KeyModifiers::NONE, KeyEventKind::Press)) {
-                if !collision_check(&tet, &occupied, 1, 0) {
+                if !collision_check(&tet, &occupied, -1, 0) {
                     move_tet(&mut tet, -1, 0);
                 }
             // Move right
             } else if event == Event::Key(KeyEvent::new_with_kind(KeyCode::Right, KeyModifiers::NONE, KeyEventKind::Press)) {
-                if !collision_check(&tet, &occupied, -1, 0) {
+                if !collision_check(&tet, &occupied, 1, 0) {
                     move_tet(&mut tet, 1, 0);
                 }
             // Move down
             } else if event == Event::Key(KeyEvent::new_with_kind(KeyCode::Down, KeyModifiers::NONE, KeyEventKind::Press)) {
-                if !collision_check(&tet, &occupied, 0, -1) {
+                if !collision_check(&tet, &occupied, 0, 1) {
                     move_tet(&mut tet, 0, 1);
                 }
-                if collision_check(&tet, &occupied, 0, -1) {
+                if collision_check(&tet, &occupied, 0, 1) {
                     place_tet(&tet, &mut occupied);
                     tet = Tet::new_random();
                 }
                 time = SystemTime::now();
             // Rotate left
             } else if event == Event::Key(KeyEvent::new_with_kind(KeyCode::Up, KeyModifiers::NONE, KeyEventKind::Press)) {
-                // TODO: Handle collisions and rotating out of frame
                 // TODO: Fix weird flipping on i, z, s, o
                 print_tet(&mut tet, true);
                 for i in 0..=3 {
@@ -205,6 +204,22 @@ fn main() {
                 let y = tet.pivot[1];
                 tet.pivot[0] = y;
                 tet.pivot[1] = -x;
+
+                // TODO: Try to help the player instead of just disallowing rotation
+                if collision_check(&tet, &occupied, 0, 0) {
+                    for i in 0..=3 {
+                        let x = tet.model[i][0];
+                        let y = tet.model[i][1];
+
+                        tet.model[i][0] = -y;
+                        tet.model[i][1] = x;
+                    }
+
+                    let x = tet.pivot[0];
+                    let y = tet.pivot[1];
+                    tet.pivot[0] = -y;
+                    tet.pivot[1] = x;
+                }
 
                 print_tet(&mut tet, false);
             }
@@ -261,21 +276,23 @@ fn print_tet(tet: &mut Tet, remove: bool) {
 }
 
 fn collision_check(tet: &Tet, occupied: &Vec<[i16; 2]>, x: i16, y: i16) -> bool {
-    let pos = tet_pos(&tet);
+    let mut pos = tet_pos(&tet);
+    pos[0] += x;
+    pos[1] += y;
     for i in 0..=3 {
         let point = tet.model[i];
-        if y != 0 && point[1] + pos[1] == H as i16 + y {
+        if point[1] + pos[1] == H as i16 {
             return true;
         }
 
-        if x < 0 && point[0] + pos[0] == W as i16 {
+        if point[0] + pos[0] == W as i16 + 1{
             return true;
-        } else if x > 0 && point[0] + pos[0] == 0 {
+        } else if point[0] + pos[0] == -1 {
             return true;
         }
 
         for occ in occupied {
-            if point[0] + pos[0] == occ[0] + x && point[1] + pos[1] == occ[1] + y {
+            if point[0] + pos[0] == occ[0] && point[1] + pos[1] == occ[1]{
                 return true;
             }
         }
@@ -297,4 +314,9 @@ fn place_tet(tet: &Tet, occupied: &mut Vec<[i16; 2]>) {
 
 fn move_cursor(x: u16, y: u16) {
     stdout().execute(MoveTo(x, y)).unwrap();
+}
+
+fn debug_print(y: u16, print: String) {
+    move_cursor(30, y);
+    print!("{}", print);
 }
