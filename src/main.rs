@@ -252,7 +252,7 @@ fn move_tet(tet: &mut Tet, x: i16, y: i16) {
     print_tet(tet, false);
 }
 
-fn print_tet(tet: &mut Tet, remove: bool) {
+fn print_tet(tet: &Tet, remove: bool) {
     let pos = tet_pos(&tet);
     for i in 0..=3 {
         let y: i16 = pos[1] + tet.model[i][1];
@@ -316,6 +316,7 @@ fn move_cursor(x: u16, y: u16) {
     stdout().execute(MoveTo(x, y)).unwrap();
 }
 
+#[allow(dead_code)]
 fn debug_print(y: u16, print: String) {
     move_cursor(30, y);
     print!("{}", print);
