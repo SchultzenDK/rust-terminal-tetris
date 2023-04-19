@@ -1,6 +1,8 @@
 use std::{time::{SystemTime, Duration}, io::stdout};
-use crossterm::{event::{poll, Event, KeyEvent, KeyCode, KeyModifiers, KeyEventKind}, cursor::{MoveTo, Hide}, ExecutableCommand, terminal};
+use crossterm::{event::{poll, Event, KeyEvent, KeyCode, KeyModifiers, KeyEventKind}, cursor::Hide, ExecutableCommand, terminal};
 use rand::Rng;
+
+mod generic;
 
 struct Tet {
     pos: [i16; 2],
@@ -229,7 +231,7 @@ fn main() {
 
 fn setup() {
     stdout().execute(Hide).unwrap();
-    move_cursor(0, 0);
+    generic::move_cursor(0, 0);
 
     let term_size = terminal::size().unwrap();
 
@@ -260,7 +262,7 @@ fn print_tet(tet: &Tet, remove: bool) {
             continue;
         }
 
-        move_cursor(
+        generic::move_cursor(
             (pos[0] + tet.model[i][0]) as u16,
             y as u16
         );
@@ -271,7 +273,7 @@ fn print_tet(tet: &Tet, remove: bool) {
             print!("■");
         }
 
-        move_cursor(0, 0);
+        generic::move_cursor(0, 0);
     }
 }
 
@@ -310,14 +312,4 @@ fn place_tet(tet: &Tet, occupied: &mut Vec<[i16; 2]>) {
     for i in 0..=3 {
         occupied.push([pos[0] + tet.model[i][0], pos[1] + tet.model[i][1]]);
     }
-}
-
-fn move_cursor(x: u16, y: u16) {
-    stdout().execute(MoveTo(x, y)).unwrap();
-}
-
-#[allow(dead_code)]
-fn debug_print(y: u16, print: String) {
-    move_cursor(30, y);
-    print!("{}", print);
 }
