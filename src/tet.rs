@@ -170,6 +170,41 @@ impl Tet {
         self.print(false);
     }
 
+    pub fn rotate(&mut self, occupied: &Vec<[i16; 2]>) {
+        // TODO: Fix weird flipping on i, z, s, o
+        self.print(true);
+        for i in 0..=3 {
+            let x = self.model[i][0];
+            let y = self.model[i][1];
+
+            self.model[i][0] = y;
+            self.model[i][1] = -x;
+        }
+
+        let x = self.pivot[0];
+        let y = self.pivot[1];
+        self.pivot[0] = y;
+        self.pivot[1] = -x;
+
+        // TODO: Try to help the player instead of just disallowing rotation
+        if self.collision_check(&occupied, 0, 0) {
+            for i in 0..=3 {
+                let x = self.model[i][0];
+                let y = self.model[i][1];
+
+                self.model[i][0] = -y;
+                self.model[i][1] = x;
+            }
+
+            let x = self.pivot[0];
+            let y = self.pivot[1];
+            self.pivot[0] = -y;
+            self.pivot[1] = x;
+        }
+
+        self.print(false);
+    }
+
     pub fn collision_check(&self, occupied: &Vec<[i16; 2]>, x: i16, y: i16) -> bool {
         let mut pos = self.points_pos();
         pos[0] += x;

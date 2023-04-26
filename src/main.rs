@@ -50,38 +50,7 @@ fn main() {
                 time = SystemTime::now();
             // Rotate left
             } else if event == Event::Key(KeyEvent::new_with_kind(KeyCode::Up, KeyModifiers::NONE, KeyEventKind::Press)) {
-                // TODO: Fix weird flipping on i, z, s, o
-                tet.print(true);
-                for i in 0..=3 {
-                    let x = tet.model[i][0];
-                    let y = tet.model[i][1];
-
-                    tet.model[i][0] = y;
-                    tet.model[i][1] = -x;
-                }
-
-                let x = tet.pivot[0];
-                let y = tet.pivot[1];
-                tet.pivot[0] = y;
-                tet.pivot[1] = -x;
-
-                // TODO: Try to help the player instead of just disallowing rotation
-                if tet.collision_check(&occupied, 0, 0) {
-                    for i in 0..=3 {
-                        let x = tet.model[i][0];
-                        let y = tet.model[i][1];
-
-                        tet.model[i][0] = -y;
-                        tet.model[i][1] = x;
-                    }
-
-                    let x = tet.pivot[0];
-                    let y = tet.pivot[1];
-                    tet.pivot[0] = -y;
-                    tet.pivot[1] = x;
-                }
-
-                tet.print(false);
+                tet.rotate(&occupied);
             }
         }
     }
