@@ -1,14 +1,16 @@
 use std::{time::{SystemTime, Duration}, io::stdout};
 use crossterm::{event::{poll, Event, KeyEvent, KeyCode, KeyModifiers, KeyEventKind}, cursor::Hide, ExecutableCommand, terminal};
 use tet::Tet;
+use point::Point;
 
 mod generic;
 mod tet;
+mod point;
 
 fn main() {
     setup();
 
-    let mut occupied: Vec<[i16; 2]> = Vec::new();
+    let mut occupied: Vec<Point> = Vec::new();
     let mut tet = Tet::new_random();
     let mut time = SystemTime::now();
 

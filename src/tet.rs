@@ -1,27 +1,26 @@
 use rand::Rng;
 
 use crate::generic;
+use crate::point::Point;
 
 pub struct Tet {
-    pub pos: [i16; 2],
-    pub pivot: [i16; 2],
-    pub model: [[i16; 2]; 4],
+    pub pos: Point,
+    pub pivot: Point,
+    pub model: [Point; 4],
 }
 
-static DEFAULT_POS: [i16; 2] = [5, 0];
+static DEFAULT_POS: Point = Point {x: 5, y: 0};
 
 impl Tet {
     fn new_i() -> Tet {
         Tet {
             pos: self::DEFAULT_POS,
-            pivot: [
-                0, 1
-            ],
+            pivot: Point::new(0, 1),
             model: [
-                [0, 0],
-                [0, 1],
-                [0, 2],
-                [0, 3]
+                Point::new(0, 0),
+                Point::new(0, 1),
+                Point::new(0, 2),
+                Point::new(0, 3),
             ],
         }
     }
@@ -29,14 +28,12 @@ impl Tet {
     fn new_l() -> Tet {
         Tet {
             pos: self::DEFAULT_POS,
-            pivot: [
-                0, 1
-            ],
+            pivot: Point::new(0, 1),
             model: [
-                [0, 0],
-                [0, 1],
-                [0, 2],
-                [1, 2]
+                Point::new(0, 0),
+                Point::new(0, 1),
+                Point::new(0, 2),
+                Point::new(1, 2),
             ],
         }
     }
@@ -44,14 +41,12 @@ impl Tet {
     fn new_j() -> Tet {
         Tet {
             pos: self::DEFAULT_POS,
-            pivot: [
-                0, 1
-            ],
+            pivot: Point::new(0, 1),
             model: [
-                [0, 0],
-                [0, 1],
-                [0, 2],
-                [-1, 2],
+                Point::new(0, 0),
+                Point::new(0, 1),
+                Point::new(0, 2),
+                Point::new(-1, 2),
             ],
         }
     }
@@ -59,14 +54,12 @@ impl Tet {
     fn new_t() -> Tet {
         Tet {
             pos: self::DEFAULT_POS,
-            pivot: [
-                1, 0
-            ],
+            pivot: Point::new(1, 0),
             model: [
-                [0, 0],
-                [1, 0],
-                [1, 1],
-                [2, 0],
+                Point::new(0, 0),
+                Point::new(1, 0),
+                Point::new(1, 1),
+                Point::new(2, 0),
             ],
         }
     }
@@ -74,14 +67,12 @@ impl Tet {
     fn new_o() -> Tet {
         Tet {
             pos: self::DEFAULT_POS,
-            pivot: [
-                0, 0
-            ],
+            pivot: Point::new(0, 0),
             model: [
-                [0, 0],
-                [1, 0],
-                [0, 1],
-                [1, 1],
+                Point::new(0, 0),
+                Point::new(1, 0),
+                Point::new(0, 1),
+                Point::new(1, 1),
             ],
         }
     }
@@ -89,14 +80,12 @@ impl Tet {
     fn new_s() -> Tet {
         Tet {
             pos: self::DEFAULT_POS,
-            pivot: [
-                1, 0
-            ],
+            pivot: Point::new(1, 0),
             model: [
-                [2, 1],
-                [1, 1],
-                [1, 0],
-                [0, 0],
+                Point::new(2, 1),
+                Point::new(1, 1),
+                Point::new(1, 0),
+                Point::new(0, 0),
             ],
         }
     }
@@ -104,14 +93,12 @@ impl Tet {
     fn new_z() -> Tet {
         Tet {
             pos: self::DEFAULT_POS,
-            pivot: [
-                1, 0
-            ],
+            pivot: Point::new(1, 0),
             model: [
-                [0, 1],
-                [1, 1],
-                [1, 0],
-                [2, 0],
+                Point::new(0, 1),
+                Point::new(1, 1),
+                Point::new(1, 0),
+                Point::new(2, 0),
             ],
         }
     }
@@ -130,44 +117,42 @@ impl Tet {
     }
 
     /// Get board position of individual points in model
-    pub fn points_pos(&self) -> [[i16; 2]; 4] {
+    pub fn points_pos(&self) -> [Point; 4] {
         return [
-            [
-                self.pos[0] - self.pivot[0] + self.model[0][0],
-                self.pos[1] - self.pivot[1] + self.model[0][1],
-            ],
-            [
-                self.pos[0] - self.pivot[0] + self.model[1][0],
-                self.pos[1] - self.pivot[1] + self.model[1][1],
-            ],
-            [
-                self.pos[0] - self.pivot[0] + self.model[2][0],
-                self.pos[1] - self.pivot[1] + self.model[2][1],
-            ],
-            [
-                self.pos[0] - self.pivot[0] + self.model[3][0],
-                self.pos[1] - self.pivot[1] + self.model[3][1],
-            ],
+            Point::new(
+                self.pos.x - self.pivot.x + self.model[0].x,
+                self.pos.y - self.pivot.y + self.model[0].y
+            ),
+            Point::new(
+                self.pos.x - self.pivot.x + self.model[1].x,
+                self.pos.y - self.pivot.y + self.model[1].y,
+            ),
+            Point::new(
+                self.pos.x - self.pivot.x + self.model[2].x,
+                self.pos.y - self.pivot.y + self.model[2].y,
+            ),
+            Point::new(
+                self.pos.x - self.pivot.x + self.model[3].x,
+                self.pos.y - self.pivot.y + self.model[3].y,
+            ),
         ];
     }
 
-    pub fn place(&self, occupied: &mut Vec<[i16; 2]>) {
+    pub fn place(&self, occupied: &mut Vec<Point>) {
         let points = self.points_pos();
-        for i in 0..=3 {
-            occupied.push([points[i][0], points[i][1]]);
-        }
+        occupied.append(&mut points.to_vec());
     }
 
     pub fn print(&self, remove: bool) {
         let points = self.points_pos();
         for i in 0..=3 {
-            let y: i16 = points[i][1];
+            let y: i16 = points[i].y;
             if y < 0 {
                 continue;
             }
 
             generic::move_cursor(
-                (points[i][0]) as u16,
+                points[i].x as u16,
                 y as u16
             );
 
@@ -183,60 +168,60 @@ impl Tet {
 
     pub fn translate(&mut self, x: i16, y: i16) {
         self.print(true);
-        self.pos[0] += x;
-        self.pos[1] += y;
+        self.pos.x += x;
+        self.pos.y += y;
         self.print(false);
     }
 
-    pub fn rotate(&mut self, occupied: &Vec<[i16; 2]>) {
+    pub fn rotate(&mut self, occupied: &Vec<Point>) {
         // TODO: Fix weird flipping on i, z, s, o
         self.print(true);
         for i in 0..=3 {
-            let x = self.model[i][0];
-            let y = self.model[i][1];
+            let x = self.model[i].x;
+            let y = self.model[i].y;
 
-            self.model[i][0] = y;
-            self.model[i][1] = -x;
+            self.model[i].x = y;
+            self.model[i].y = -x;
         }
 
-        let x = self.pivot[0];
-        let y = self.pivot[1];
-        self.pivot[0] = y;
-        self.pivot[1] = -x;
+        let x = self.pivot.x;
+        let y = self.pivot.y;
+        self.pivot.x = y;
+        self.pivot.y = -x;
 
         // TODO: Try to help the player instead of just disallowing rotation
         if self.collision_check(&occupied, 0, 0) {
             for i in 0..=3 {
-                let x = self.model[i][0];
-                let y = self.model[i][1];
+                let x = self.model[i].x;
+                let y = self.model[i].y;
 
-                self.model[i][0] = -y;
-                self.model[i][1] = x;
+                self.model[i].x = -y;
+                self.model[i].y = x;
             }
 
-            let x = self.pivot[0];
-            let y = self.pivot[1];
-            self.pivot[0] = -y;
-            self.pivot[1] = x;
+            let x = self.pivot.x;
+            let y = self.pivot.y;
+            self.pivot.x = -y;
+            self.pivot.y = x;
         }
 
         self.print(false);
     }
 
-    pub fn collision_check(&self, occupied: &Vec<[i16; 2]>, x: i16, y: i16) -> bool {
+    pub fn collision_check(&self, occupied: &Vec<Point>, x: i16, y: i16) -> bool {
         let points = self.points_pos();
         for i in 0..=3 {
             let point = points[i];
-            if point[1] + y == generic::H as i16 {
+            if point.y + y == generic::H as i16 {
                 return true;
             }
 
-            if point[0] + x == generic::W as i16 + 1 || point[0] + x == -1 {
+            if point.x + x == generic::W as i16 + 1 || point.x + x == -1 {
                 return true;
             }
 
             for occ in occupied {
-                if point[0] + x == occ[0] && point[1] + y == occ[1] {
+                if point.x + x == occ.x && point.y + y == occ.y {
                     return true;
                 }
             }
