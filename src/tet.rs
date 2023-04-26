@@ -8,12 +8,12 @@ pub struct Tet {
     pub model: [[i16; 2]; 4],
 }
 
+static DEFAULT_POS: [i16; 2] = [5, 0];
+
 impl Tet {
     fn new_i() -> Tet {
         Tet {
-            pos: [
-                5, 0
-            ],
+            pos: self::DEFAULT_POS,
             pivot: [
                 0, 1
             ],
@@ -28,9 +28,7 @@ impl Tet {
 
     fn new_l() -> Tet {
         Tet {
-            pos: [
-                5, 0
-            ],
+            pos: self::DEFAULT_POS,
             pivot: [
                 0, 1
             ],
@@ -45,9 +43,7 @@ impl Tet {
 
     fn new_j() -> Tet {
         Tet {
-            pos: [
-                5, 0
-            ],
+            pos: self::DEFAULT_POS,
             pivot: [
                 0, 1
             ],
@@ -62,9 +58,7 @@ impl Tet {
 
     fn new_t() -> Tet {
         Tet {
-            pos: [
-                5, 0
-            ],
+            pos: self::DEFAULT_POS,
             pivot: [
                 1, 0
             ],
@@ -79,9 +73,7 @@ impl Tet {
 
     fn new_o() -> Tet {
         Tet {
-            pos: [
-                5, 0
-            ],
+            pos: self::DEFAULT_POS,
             pivot: [
                 0, 0
             ],
@@ -96,9 +88,7 @@ impl Tet {
 
     fn new_s() -> Tet {
         Tet {
-            pos: [
-                5, 0
-            ],
+            pos: self::DEFAULT_POS,
             pivot: [
                 1, 0
             ],
@@ -113,9 +103,7 @@ impl Tet {
 
     fn new_z() -> Tet {
         Tet {
-            pos: [
-                5, 0
-            ],
+            pos: self::DEFAULT_POS,
             pivot: [
                 1, 0
             ],
