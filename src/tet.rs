@@ -230,5 +230,3 @@ impl Tet {
         return false;
     }
 }
-
-
