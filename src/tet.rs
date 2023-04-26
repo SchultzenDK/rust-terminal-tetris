@@ -129,27 +129,45 @@ impl Tet {
         }
     }
 
-    pub fn points_pos(&self) -> [i16; 2] {
-        return [self.pos[0] - self.pivot[0], self.pos[1] - self.pivot[1]];
+    /// Get board position of individual points in model
+    pub fn points_pos(&self) -> [[i16; 2]; 4] {
+        return [
+            [
+                self.pos[0] - self.pivot[0] + self.model[0][0],
+                self.pos[1] - self.pivot[1] + self.model[0][1],
+            ],
+            [
+                self.pos[0] - self.pivot[0] + self.model[1][0],
+                self.pos[1] - self.pivot[1] + self.model[1][1],
+            ],
+            [
+                self.pos[0] - self.pivot[0] + self.model[2][0],
+                self.pos[1] - self.pivot[1] + self.model[2][1],
+            ],
+            [
+                self.pos[0] - self.pivot[0] + self.model[3][0],
+                self.pos[1] - self.pivot[1] + self.model[3][1],
+            ],
+        ];
     }
 
     pub fn place(&self, occupied: &mut Vec<[i16; 2]>) {
-        let pos = self.points_pos();
+        let points = self.points_pos();
         for i in 0..=3 {
-            occupied.push([pos[0] + self.model[i][0], pos[1] + self.model[i][1]]);
+            occupied.push([points[i][0], points[i][1]]);
         }
     }
 
     pub fn print(&self, remove: bool) {
-        let pos = self.points_pos();
+        let points = self.points_pos();
         for i in 0..=3 {
-            let y: i16 = pos[1] + self.model[i][1];
+            let y: i16 = points[i][1];
             if y < 0 {
                 continue;
             }
 
             generic::move_cursor(
-                (pos[0] + self.model[i][0]) as u16,
+                (points[i][0]) as u16,
                 y as u16
             );
 
@@ -206,23 +224,19 @@ impl Tet {
     }
 
     pub fn collision_check(&self, occupied: &Vec<[i16; 2]>, x: i16, y: i16) -> bool {
-        let mut pos = self.points_pos();
-        pos[0] += x;
-        pos[1] += y;
+        let points = self.points_pos();
         for i in 0..=3 {
-            let point = self.model[i];
-            if point[1] + pos[1] == generic::H as i16 {
+            let point = points[i];
+            if point[1] + y == generic::H as i16 {
                 return true;
             }
 
-            if point[0] + pos[0] == generic::W as i16 + 1{
-                return true;
-            } else if point[0] + pos[0] == -1 {
+            if point[0] + x == generic::W as i16 + 1 || point[0] + x == -1 {
                 return true;
             }
 
             for occ in occupied {
-                if point[0] + pos[0] == occ[0] && point[1] + pos[1] == occ[1]{
+                if point[0] + x == occ[0] && point[1] + y == occ[1] {
                     return true;
                 }
             }
