@@ -166,11 +166,20 @@ impl Tet {
         }
     }
 
-    pub fn translate(&mut self, x: i16, y: i16) {
+    /// Translate if there's no collision
+    ///
+    /// Returns true on success or false if unable to move
+    pub fn translate(&mut self, x: i16, y: i16, occupied: &Vec<Point>) -> bool {
+        if generic::collision_check(self.points_pos(), &occupied, x, y) {
+            return false;
+        }
+
         self.print(true);
         self.pos.x += x;
         self.pos.y += y;
         self.print(false);
+
+        return true;
     }
 
     pub fn rotate(&mut self, occupied: &Vec<Point>) {
@@ -190,7 +199,7 @@ impl Tet {
         self.pivot.y = -x;
 
         // TODO: Try to help the player instead of just disallowing rotation
-        if self.collision_check(&occupied, 0, 0) {
+        if generic::collision_check(self.points_pos(), &occupied, 0, 0) {
             for i in 0..=3 {
                 let x = self.model[i].x;
                 let y = self.model[i].y;
@@ -206,27 +215,5 @@ impl Tet {
         }
 
         self.print(false);
-    }
-
-    pub fn collision_check(&self, occupied: &Vec<Point>, x: i16, y: i16) -> bool {
-        let points = self.points_pos();
-        for i in 0..=3 {
-            let point = points[i];
-            if point.y + y == generic::H as i16 {
-                return true;
-            }
-
-            if point.x + x == generic::W as i16 + 1 || point.x + x == -1 {
-                return true;
-            }
-
-            for occ in occupied {
-                if point.x + x == occ.x && point.y + y == occ.y {
-                    return true;
-                }
-            }
-        }
-
-        return false;
     }
 }
