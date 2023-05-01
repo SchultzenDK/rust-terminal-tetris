@@ -9,12 +9,10 @@ pub struct Tet {
     pub model: [Point; 4],
 }
 
-static DEFAULT_POS: Point = Point {x: 5, y: 0};
-
 impl Tet {
     fn new_i() -> Tet {
         Tet {
-            pos: self::DEFAULT_POS,
+            pos: Point::new(5, -3),
             pivot: Point::new(0, 1),
             model: [
                 Point::new(0, 0),
@@ -27,7 +25,7 @@ impl Tet {
 
     fn new_l() -> Tet {
         Tet {
-            pos: self::DEFAULT_POS,
+            pos: Point::new(5, -2),
             pivot: Point::new(0, 1),
             model: [
                 Point::new(0, 0),
@@ -40,7 +38,7 @@ impl Tet {
 
     fn new_j() -> Tet {
         Tet {
-            pos: self::DEFAULT_POS,
+            pos: Point::new(5, -2),
             pivot: Point::new(0, 1),
             model: [
                 Point::new(0, 0),
@@ -53,7 +51,7 @@ impl Tet {
 
     fn new_t() -> Tet {
         Tet {
-            pos: self::DEFAULT_POS,
+            pos: Point::new(5, -2),
             pivot: Point::new(1, 0),
             model: [
                 Point::new(0, 0),
@@ -66,7 +64,7 @@ impl Tet {
 
     fn new_o() -> Tet {
         Tet {
-            pos: self::DEFAULT_POS,
+            pos: Point::new(5, -2),
             pivot: Point::new(0, 0),
             model: [
                 Point::new(0, 0),
@@ -79,7 +77,7 @@ impl Tet {
 
     fn new_s() -> Tet {
         Tet {
-            pos: self::DEFAULT_POS,
+            pos: Point::new(5, -2),
             pivot: Point::new(1, 0),
             model: [
                 Point::new(2, 1),
@@ -92,7 +90,7 @@ impl Tet {
 
     fn new_z() -> Tet {
         Tet {
-            pos: self::DEFAULT_POS,
+            pos: Point::new(5, -2),
             pivot: Point::new(1, 0),
             model: [
                 Point::new(0, 1),
