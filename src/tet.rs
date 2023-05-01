@@ -5,8 +5,11 @@ use crate::point::Point;
 
 pub struct Tet {
     pub pos: Point,
-    pub pivot: Point,
-    pub model: [Point; 4],
+    pivot: Point,
+    model: [Point; 4],
+    allowed_flips: u8,
+    flips: u8,
+    rotate_clockwise: bool,
 }
 
 impl Tet {
@@ -20,6 +23,9 @@ impl Tet {
                 Point::new(0, 2),
                 Point::new(0, 3),
             ],
+            allowed_flips: 1,
+            flips: 0,
+            rotate_clockwise: true,
         }
     }
 
@@ -33,6 +39,9 @@ impl Tet {
                 Point::new(0, 2),
                 Point::new(1, 2),
             ],
+            allowed_flips: 3,
+            flips: 0,
+            rotate_clockwise: true,
         }
     }
 
@@ -46,6 +55,9 @@ impl Tet {
                 Point::new(0, 2),
                 Point::new(-1, 2),
             ],
+            allowed_flips: 3,
+            flips: 0,
+            rotate_clockwise: true,
         }
     }
 
@@ -59,6 +71,9 @@ impl Tet {
                 Point::new(1, 1),
                 Point::new(2, 0),
             ],
+            allowed_flips: 3,
+            flips: 0,
+            rotate_clockwise: true,
         }
     }
 
@@ -72,32 +87,41 @@ impl Tet {
                 Point::new(0, 1),
                 Point::new(1, 1),
             ],
+            allowed_flips: 0,
+            flips: 0,
+            rotate_clockwise: true,
         }
     }
 
     fn new_s() -> Tet {
         Tet {
             pos: Point::new(5, -2),
-            pivot: Point::new(1, 0),
-            model: [
-                Point::new(2, 1),
-                Point::new(1, 1),
-                Point::new(1, 0),
-                Point::new(0, 0),
-            ],
-        }
-    }
-
-    fn new_z() -> Tet {
-        Tet {
-            pos: Point::new(5, -2),
-            pivot: Point::new(1, 0),
+            pivot: Point::new(1, 1),
             model: [
                 Point::new(0, 1),
                 Point::new(1, 1),
                 Point::new(1, 0),
                 Point::new(2, 0),
             ],
+            allowed_flips: 1,
+            flips: 0,
+            rotate_clockwise: false,
+        }
+    }
+
+    fn new_z() -> Tet {
+        Tet {
+            pos: Point::new(5, -2),
+            pivot: Point::new(1, 1),
+            model: [
+                Point::new(2, 1),
+                Point::new(1, 1),
+                Point::new(1, 0),
+                Point::new(0, 0),
+            ],
+            allowed_flips: 1,
+            flips: 0,
+            rotate_clockwise: true,
         }
     }
 
@@ -181,23 +205,21 @@ impl Tet {
     }
 
     pub fn rotate(&mut self, occupied: &Vec<Point>) {
-        // TODO: Fix weird flipping on i, z, s, o
-        let mut clone = self.clone();
-
-        // Rotate model
-        for i in 0..=3 {
-            let x = clone.model[i].x;
-            let y = clone.model[i].y;
-
-            clone.model[i].x = y;
-            clone.model[i].y = -x;
+        if self.allowed_flips == 0 {
+            return;
         }
 
-        // Rotate pivot
-        let x = clone.pivot.x;
-        let y = clone.pivot.y;
-        clone.pivot.x = y;
-        clone.pivot.y = -x;
+        let mut clone = self.clone();
+
+        let reset_flip = clone.allowed_flips == clone.flips;
+
+        if reset_flip {
+            for _ in 0..clone.flips {
+                clone.rotate_model(clone.rotate_clockwise);
+            }
+        } else {
+            clone.rotate_model(!clone.rotate_clockwise);
+        }
 
         // Help player by getting closest free position
         let mut success = false;
@@ -229,10 +251,42 @@ impl Tet {
 
         // Update and print `self`
         self.print(true);
+        if !reset_flip {
+            self.flips += 1;
+        } else {
+            self.flips = 0;
+        }
         self.model = clone.model;
         self.pivot = clone.pivot;
         self.pos = clone.pos;
         self.print(false);
+    }
+
+    fn rotate_model(&mut self, clockwise: bool) {
+        for i in 0..=3 {
+            let x: i16 = self.model[i].x;
+            let y = self.model[i].y;
+
+            if clockwise {
+                self.model[i].x = y;
+                self.model[i].y = -x;
+            } else {
+                self.model[i].x = -y;
+                self.model[i].y = x;
+            }
+        }
+
+        // Rotate pivot
+        let x = self.pivot.x;
+        let y = self.pivot.y;
+
+        if clockwise {
+            self.pivot.x = y;
+            self.pivot.y = -x;
+        } else {
+            self.pivot.x = -y;
+            self.pivot.y = x;
+        }
     }
 }
 
