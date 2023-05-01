@@ -104,7 +104,7 @@ impl Tet {
     }
 
     pub fn new_random() -> Tet {
-        let rnd = rand::thread_rng().gen_range(0..=5);
+        let rnd: u8 = rand::thread_rng().gen_range(0..=6);
         match rnd {
             0 => return Tet::new_i(),
             1 => return Tet::new_l(),
@@ -184,36 +184,64 @@ impl Tet {
 
     pub fn rotate(&mut self, occupied: &Vec<Point>) {
         // TODO: Fix weird flipping on i, z, s, o
-        self.print(true);
-        for i in 0..=3 {
-            let x = self.model[i].x;
-            let y = self.model[i].y;
+        let mut clone = self.clone();
 
-            self.model[i].x = y;
-            self.model[i].y = -x;
+        // Rotate model
+        for i in 0..=3 {
+            let x = clone.model[i].x;
+            let y = clone.model[i].y;
+
+            clone.model[i].x = y;
+            clone.model[i].y = -x;
         }
 
-        let x = self.pivot.x;
-        let y = self.pivot.y;
-        self.pivot.x = y;
-        self.pivot.y = -x;
+        // Rotate pivot
+        let x = clone.pivot.x;
+        let y = clone.pivot.y;
+        clone.pivot.x = y;
+        clone.pivot.y = -x;
 
-        // TODO: Try to help the player instead of just disallowing rotation
-        if generic::collision_check(self.points_pos(), &occupied, 0, 0) {
-            for i in 0..=3 {
-                let x = self.model[i].x;
-                let y = self.model[i].y;
+        // Help player by getting closest free position
+        let mut success = false;
+        for y in 0..=2 {
+            for x in 0..=2 {
+                if !generic::collision_check(clone.points_pos(), occupied, x, -y) {
+                    clone.pos.x += x;
+                    success = true;
+                    break;
+                }
 
-                self.model[i].x = -y;
-                self.model[i].y = x;
+                if !generic::collision_check(clone.points_pos(), occupied, -x, -y) {
+                    clone.pos.x -= x;
+                    success = true;
+                    break;
+                }
             }
 
-            let x = self.pivot.x;
-            let y = self.pivot.y;
-            self.pivot.x = -y;
-            self.pivot.y = x;
+            if success {
+                clone.pos.y -= y;
+                break;
+            }
         }
 
+        if !success {
+            // Could not rotate
+            return;
+        }
+
+        // Update and print `self`
+        self.print(true);
+        self.model = clone.model;
+        self.pivot = clone.pivot;
+        self.pos = clone.pos;
         self.print(false);
+    }
+}
+
+impl Copy for Tet {}
+
+impl Clone for Tet {
+    fn clone(&self) -> Self {
+        *self
     }
 }
