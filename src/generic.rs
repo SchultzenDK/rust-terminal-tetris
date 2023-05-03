@@ -2,8 +2,8 @@ use std::io::stdout;
 use crossterm::{cursor::MoveTo, ExecutableCommand};
 use crate::point::Point;
 
-pub static H:u16 = 20;
-pub static W:u16 = 10;
+pub const H:u16 = 20;
+pub const W:u16 = 10;
 
 pub fn move_cursor(x: u16, y: u16) {
     stdout().execute(MoveTo(x, y)).unwrap();
@@ -22,7 +22,7 @@ pub fn collision_check(points: [Point; 4], occupied: &Vec<Point>, x: i16, y: i16
             return true;
         }
 
-        if point.x + x == self::W as i16 + 1 || point.x + x == -1 {
+        if point.x + x == self::W as i16 || point.x + x == -1 {
             return true;
         }
 
