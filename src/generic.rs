@@ -11,13 +11,14 @@ pub fn move_cursor(x: u16, y: u16) {
 
 #[allow(dead_code)]
 pub fn debug_print(y: u16, print: &str) {
-    move_cursor(30, y);
+    move_cursor(15, y);
     print!("{}", print);
 }
 
 pub fn collision_check(points: [Point; 4], occupied: &Vec<Point>, x: i16, y: i16) -> bool {
     for i in 0..=3 {
         let point = points[i];
+        // FIXME: Tet stops one y too early if running exe directly (outside of terminal)
         if point.y + y == self::H as i16 {
             return true;
         }

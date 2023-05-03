@@ -57,20 +57,8 @@ fn main() {
 
 fn setup() {
     stdout().execute(Hide).unwrap();
-    generic::move_cursor(0, 0);
-
-    let term_size = terminal::size().unwrap();
-
-    for i in 0..term_size.1 {
-        for j in 0..term_size.0 {
-            if j < generic::W && i <= generic::H {
-                print!(".");
-            } else {
-                print!(" ");
-            }
-        }
-        println!("");
-    }
+    clear_terminal();
+    clear_board();
 }
 
 /// Clear rows that span entire width of board
@@ -96,6 +84,7 @@ fn clear_full_rows(occupied: &mut Vec<Point>) {
     // Move rows down and save rows to remove
     let mut indexes_to_remove: Vec<usize> = Vec::new();
     for i in 0..occupied.len() {
+        // FIXME: Panics if Y is negative (which it is when Tet spawns)
         if rows[occupied[i].y as usize] == generic::W {
             indexes_to_remove.push(i);
         } else {
@@ -118,21 +107,43 @@ fn get_row_count(occupied: &Vec<Point>) -> [u16; generic::H as usize] {
     let mut rows: [u16; generic::H as usize] = [0; generic::H as usize];
 
     for occ in occupied {
+        // FIXME: Panics if Y is negative (which it is when Tet spawns)
         rows[occ.y as usize] += 1;
     }
 
     return rows;
 }
 
-/// Clear board
+/// Clear entire terminal with empty spaces
+fn clear_terminal() {
+    generic::move_cursor(0, 0);
+
+    let term_size = terminal::size().unwrap();
+
+    for _ in 0..term_size.1 {
+        for _ in 0..term_size.0 {
+            print!(" ");
+        }
+        println!("");
+    }
+
+    generic::move_cursor(0, 0);
+}
+
+/// Clear board with default background
 ///
-/// Only clears board, and not entire terminal
+/// Call `clear_terminal()` to clear entire terminal
 fn clear_board() {
+    generic::move_cursor(0, 0);
+
     for y in 0..generic::H {
         for x in 0..generic::W {
             generic::move_cursor(x, y);
             print!(".");
         }
+
+        // TODO: Remove this whenever you figure out the .exe bug noted in `generic::collision_check()`
+        generic::debug_print(y, &format!("{:?}", y));
     }
 
     generic::move_cursor(0, 0);
