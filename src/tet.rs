@@ -160,9 +160,26 @@ impl Tet {
         ];
     }
 
-    pub fn place(&self, occupied: &mut Vec<Point>) {
+    pub fn can_place(&self) -> bool {
+        for point in self.points_pos() {
+            if point.y < 0 {
+                return false;
+            }
+        }
+
+        return true;
+    }
+
+    /// Place Tet, return success
+    pub fn place(&self, occupied: &mut Vec<Point>) -> bool {
+        if !self.can_place() {
+            return false;
+        }
+
         let points = self.points_pos();
         occupied.append(&mut points.to_vec());
+
+        return true;
     }
 
     pub fn print(&self, remove: bool) {
