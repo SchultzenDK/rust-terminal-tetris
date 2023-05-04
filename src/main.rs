@@ -1,4 +1,4 @@
-use std::{time::{SystemTime, Duration}, io::stdout};
+use std::{time::{SystemTime, Duration}, io::stdin};
 use crossterm::{event::{poll, Event, KeyEvent, KeyCode, KeyModifiers, KeyEventKind}};
 use tet::Tet;
 use point::Point;
@@ -8,6 +8,11 @@ mod tet;
 mod point;
 
 fn main() {
+    // Required for running EXE directly
+    println!("Press enter to start");
+    let mut buf = String::new();
+    stdin().read_line(&mut buf).unwrap();
+
     setup();
 
     let mut occupied: Vec<Point> = Vec::new();
