@@ -1,5 +1,5 @@
 use std::{time::{SystemTime, Duration}, io::stdin};
-use crossterm::{event::{poll, Event, KeyEvent, KeyCode, KeyModifiers, KeyEventKind}};
+use crossterm::event::{poll, Event, KeyEvent, KeyCode, KeyModifiers, KeyEventKind};
 use tet::Tet;
 use point::Point;
 
@@ -19,6 +19,8 @@ fn main() {
         let mut occupied: Vec<Point> = Vec::new();
         let mut tet = Tet::new_random();
         let mut time = SystemTime::now();
+        let mut score: u32 = 0;
+        print_score(score);
 
         loop {
             // Auto fall
@@ -28,7 +30,8 @@ fn main() {
                         break;
                     }
 
-                    clear_full_rows(&mut occupied);
+                    let cleared_rows = clear_full_rows(&mut occupied);
+                    update_score(cleared_rows, &mut score);
                     tet = Tet::new_random();
                 }
 
@@ -52,7 +55,8 @@ fn main() {
                             break;
                         }
 
-                        clear_full_rows(&mut occupied);
+                        let cleared_rows = clear_full_rows(&mut occupied);
+                        update_score(cleared_rows, &mut score);
                         tet = Tet::new_random();
                     }
 
@@ -94,24 +98,37 @@ fn setup() {
     generic::clear_board();
 }
 
+fn update_score(cleared_rows: u8, score: &mut u32) {
+    // TODO reading: Try to better understand dereferencing
+    *score += 3_u32.pow(cleared_rows as u32 + 1);
+    print_score(*score);
+}
+
+fn print_score(score: u32) {
+    generic::move_cursor(15, 2);
+    println!("Score: {:?}", score);
+}
+
 /// Clear rows that span entire width of board
-fn clear_full_rows(occupied: &mut Vec<Point>) {
+///
+/// Returns cleared row count
+fn clear_full_rows(occupied: &mut Vec<Point>) -> u8 {
     let rows = get_row_count(occupied);
 
     // Which rows should move down, and how far
-    let mut move_down_arr: [u16; generic::H as usize] = [0; generic::H as usize];
-    let mut move_down: u16 = 0;
+    let mut move_down_arr: [u8; generic::H as usize] = [0; generic::H as usize];
+    let mut cleared_rows: u8 = 0;
     for i in (0..move_down_arr.len()).rev() {
         if rows[i] == generic::W {
-            move_down += 1;
+            cleared_rows += 1;
         } else {
-            move_down_arr[i] = move_down;
+            move_down_arr[i] = cleared_rows;
         }
     }
 
     // Nothing was moved down, so no rows were cleared
-    if move_down == 0 {
-        return;
+    if cleared_rows == 0 {
+        return 0;
     }
 
     // Move rows down and save rows to remove
@@ -132,6 +149,8 @@ fn clear_full_rows(occupied: &mut Vec<Point>) {
 
     // Print updates
     print_occupied(occupied);
+
+    cleared_rows
 }
 
 /// Get all rows with count of occupied spaces
@@ -143,6 +162,7 @@ fn get_row_count(occupied: &Vec<Point>) -> [u16; generic::H as usize] {
         rows[occ.y as usize] += 1;
     }
 
+    // TODO: Remove `return` where not needed
     return rows;
 }
 
