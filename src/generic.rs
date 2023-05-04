@@ -1,12 +1,16 @@
 use std::io::stdout;
-use crossterm::{cursor::MoveTo, ExecutableCommand};
+use crossterm::{cursor, terminal, Command, ExecutableCommand};
 use crate::point::Point;
 
 pub const H:u16 = 20;
 pub const W:u16 = 10;
 
+pub fn term_command(command: impl Command) {
+    stdout().execute(command).unwrap();
+}
+
 pub fn move_cursor(x: u16, y: u16) {
-    stdout().execute(MoveTo(x, y)).unwrap();
+    term_command(cursor::MoveTo(x, y));
 }
 
 #[allow(dead_code)]
@@ -18,7 +22,6 @@ pub fn debug_print(y: u16, print: &str) {
 pub fn collision_check(points: [Point; 4], occupied: &Vec<Point>, x: i16, y: i16) -> bool {
     for i in 0..=3 {
         let point = points[i];
-        // FIXME: Tet stops one y too early if running exe directly (outside of terminal)
         if point.y + y == self::H as i16 {
             return true;
         }
@@ -35,4 +38,28 @@ pub fn collision_check(points: [Point; 4], occupied: &Vec<Point>, x: i16, y: i16
     }
 
     return false;
+}
+
+pub fn clear_terminal() {
+    term_command(terminal::Clear(terminal::ClearType::All));
+}
+
+/// Clear board with default background
+///
+/// Call `clear_terminal()` to clear entire terminal
+pub fn clear_board() {
+    move_cursor(0, 0);
+
+    for y in 0..H {
+        for x in 0..W {
+            move_cursor(x, y);
+            print!(".");
+        }
+    }
+
+    move_cursor(0, 0);
+}
+
+pub fn hide_cursor() {
+    term_command(cursor::Hide);
 }

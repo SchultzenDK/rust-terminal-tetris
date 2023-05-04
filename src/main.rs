@@ -1,5 +1,5 @@
 use std::{time::{SystemTime, Duration}, io::stdout};
-use crossterm::{event::{poll, Event, KeyEvent, KeyCode, KeyModifiers, KeyEventKind}, cursor::Hide, ExecutableCommand, terminal};
+use crossterm::{event::{poll, Event, KeyEvent, KeyCode, KeyModifiers, KeyEventKind}};
 use tet::Tet;
 use point::Point;
 
@@ -56,9 +56,9 @@ fn main() {
 }
 
 fn setup() {
-    stdout().execute(Hide).unwrap();
-    clear_terminal();
-    clear_board();
+    generic::hide_cursor();
+    generic::clear_terminal();
+    generic::clear_board();
 }
 
 /// Clear rows that span entire width of board
@@ -98,7 +98,6 @@ fn clear_full_rows(occupied: &mut Vec<Point>) {
     }
 
     // Print updates
-    clear_board();
     print_occupied(occupied);
 }
 
@@ -114,43 +113,10 @@ fn get_row_count(occupied: &Vec<Point>) -> [u16; generic::H as usize] {
     return rows;
 }
 
-/// Clear entire terminal with empty spaces
-fn clear_terminal() {
-    generic::move_cursor(0, 0);
-
-    let term_size = terminal::size().unwrap();
-
-    for _ in 0..term_size.1 {
-        for _ in 0..term_size.0 {
-            print!(" ");
-        }
-        println!("");
-    }
-
-    generic::move_cursor(0, 0);
-}
-
-/// Clear board with default background
-///
-/// Call `clear_terminal()` to clear entire terminal
-fn clear_board() {
-    generic::move_cursor(0, 0);
-
-    for y in 0..generic::H {
-        for x in 0..generic::W {
-            generic::move_cursor(x, y);
-            print!(".");
-        }
-
-        // TODO: Remove this whenever you figure out the .exe bug noted in `generic::collision_check()`
-        generic::debug_print(y, &format!("{:?}", y));
-    }
-
-    generic::move_cursor(0, 0);
-}
-
-/// Print occupied points
+/// Clear board and print occupied points
 fn print_occupied(occupied: &Vec<Point>) {
+    generic::clear_board();
+
     for occ in occupied {
         generic::move_cursor(occ.x as u16, occ.y as u16);
         print!("■");
