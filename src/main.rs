@@ -25,16 +25,9 @@ fn main() {
         loop {
             // Auto fall
             if time.elapsed().unwrap().as_secs() >= 1 {
-                if !tet.translate(0, 1, &occupied) {
-                    if !tet.place(&mut occupied) {
-                        break;
-                    }
-
-                    let cleared_rows = clear_full_rows(&mut occupied);
-                    update_score(cleared_rows, &mut score);
-                    tet = Tet::new_random();
+                if !move_tet_down(&mut tet, &mut occupied, &mut score) {
+                    break;
                 }
-
                 time = SystemTime::now();
             }
 
@@ -50,16 +43,9 @@ fn main() {
                     tet.translate(1, 0, &occupied);
                 // Move down
                 } else if event == Event::Key(KeyEvent::new_with_kind(KeyCode::Down, KeyModifiers::NONE, KeyEventKind::Press)) {
-                    if !tet.translate(0, 1, &occupied) {
-                        if !tet.place(&mut occupied) {
-                            break;
-                        }
-
-                        let cleared_rows = clear_full_rows(&mut occupied);
-                        update_score(cleared_rows, &mut score);
-                        tet = Tet::new_random();
+                    if !move_tet_down(&mut tet, &mut occupied, &mut score) {
+                        break;
                     }
-
                     time = SystemTime::now();
                 // Rotate left
                 } else if event == Event::Key(KeyEvent::new_with_kind(KeyCode::Up, KeyModifiers::NONE, KeyEventKind::Press)) {
@@ -99,7 +85,6 @@ fn setup() {
 }
 
 fn update_score(cleared_rows: u8, score: &mut u32) {
-    // TODO reading: Try to better understand dereferencing
     *score += 3_u32.pow(cleared_rows as u32 + 1);
     print_score(*score);
 }
@@ -107,6 +92,23 @@ fn update_score(cleared_rows: u8, score: &mut u32) {
 fn print_score(score: u32) {
     generic::move_cursor(15, 2);
     println!("Score: {:?}", score);
+}
+
+/// Move tet down
+///
+/// Returns false if unable to place, otherwise true
+fn move_tet_down(tet: &mut Tet, occupied: &mut Vec<Point>, score: &mut u32) -> bool {
+    if !tet.translate(0, 1, &occupied) {
+        if !tet.place(&mut *occupied) {
+            return false;
+        }
+
+        let cleared_rows = clear_full_rows(&mut *occupied);
+        update_score(cleared_rows, &mut *score);
+        *tet = Tet::new_random();
+    }
+
+    return true;
 }
 
 /// Clear rows that span entire width of board
