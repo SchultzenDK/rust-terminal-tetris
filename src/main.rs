@@ -2,10 +2,12 @@ use std::{time::{SystemTime, Duration}, io::stdin};
 use crossterm::event::{poll, Event, KeyEvent, KeyCode, KeyModifiers, KeyEventKind};
 use tet::Tet;
 use point::Point;
+use input::Input;
 
 mod generic;
 mod tet;
 mod point;
+mod input;
 
 fn main() {
     // Required for running EXE directly
@@ -13,12 +15,19 @@ fn main() {
     let mut buf = String::new();
     stdin().read_line(&mut buf).unwrap();
 
+    let mut input = Input::new();
+
     loop {
         setup();
 
         let mut occupied: Vec<Point> = Vec::new();
         let mut tet = Tet::new_random();
         let mut time = SystemTime::now();
+        let mut input_memory = [
+            InputMem::new(KeyCode::Left),
+            InputMem::new(KeyCode::Right),
+            InputMem::new(KeyCode::Down)
+        ];
         let mut score: u32 = 0;
         print_score(score);
 
@@ -32,25 +41,30 @@ fn main() {
             }
 
             // Controls
-            if poll(Duration::from_secs(0)).unwrap() {
-                let event = crossterm::event::read().unwrap();
+            input.capture_input();
 
-                // Move left
-                if event == Event::Key(KeyEvent::new_with_kind(KeyCode::Left, KeyModifiers::NONE, KeyEventKind::Press)) {
-                    tet.translate(-1, 0, &occupied);
-                // Move right
-                } else if event == Event::Key(KeyEvent::new_with_kind(KeyCode::Right, KeyModifiers::NONE, KeyEventKind::Press)) {
-                    tet.translate(1, 0, &occupied);
-                // Move down
-                } else if event == Event::Key(KeyEvent::new_with_kind(KeyCode::Down, KeyModifiers::NONE, KeyEventKind::Press)) {
-                    if !move_tet_down(&mut tet, &mut occupied, &mut score) {
-                        break;
-                    }
-                    time = SystemTime::now();
-                // Rotate left
-                } else if event == Event::Key(KeyEvent::new_with_kind(KeyCode::Up, KeyModifiers::NONE, KeyEventKind::Press)) {
-                    tet.rotate(&occupied);
+            if input.key_down(KeyCode::Left) && input_memory[0].allowed() {
+                tet.translate(-1, 0, &occupied);
+                input_memory[0].set_time();
+            }
+            if input.key_down(KeyCode::Right) && input_memory[1].allowed() {
+                tet.translate(1, 0, &occupied);
+                input_memory[1].set_time();
+            }
+            if input.key_down(KeyCode::Down) && input_memory[2].allowed() {
+                if !move_tet_down(&mut tet, &mut occupied, &mut score) {
+                    break;
                 }
+                time = SystemTime::now();
+                input_memory[2].set_time();
+            }
+
+            if input.key_pressed(KeyCode::Up) {
+                tet.rotate(&occupied);
+            }
+
+            for mem in &mut input_memory {
+                mem.set_released(&input);
             }
         }
 
@@ -178,4 +192,32 @@ fn print_occupied(occupied: &Vec<Point>) {
     }
 
     generic::move_cursor(0, 0);
+}
+
+struct InputMem {
+    code: KeyCode,
+    time: SystemTime,
+    released: bool,
+}
+
+impl InputMem {
+    fn new(code: KeyCode) -> InputMem {
+        InputMem {
+            code,
+            time: SystemTime::now(),
+            released: true,
+        }
+    }
+
+    fn allowed(&self) -> bool {
+        self.released || self.time.elapsed().unwrap().as_millis() > 100
+    }
+
+    fn set_time(&mut self) {
+        self.time = SystemTime::now();
+    }
+
+    fn set_released(&mut self, input: &Input) {
+        self.released = !input.key_down(self.code);
+    }
 }

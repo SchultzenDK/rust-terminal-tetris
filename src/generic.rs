@@ -17,6 +17,7 @@ pub fn move_cursor(x: u16, y: u16) {
 pub fn debug_print(y: u16, print: &str) {
     move_cursor(15, y);
     print!("{}", print);
+    move_cursor(0, 0);
 }
 
 pub fn collision_check(points: [Point; 4], occupied: &Vec<Point>, x: i16, y: i16) -> bool {
