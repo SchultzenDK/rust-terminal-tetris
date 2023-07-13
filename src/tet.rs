@@ -1,5 +1,6 @@
 use rand::Rng;
 
+use crate::board::Board;
 use crate::generic;
 use crate::point::Point;
 
@@ -182,7 +183,7 @@ impl Tet {
         return true;
     }
 
-    pub fn print(&self, remove: bool) {
+    pub fn print(&self, remove: bool, board: &Board) {
         let points = self.points_pos();
         for i in 0..=3 {
             let y: i16 = points[i].y;
@@ -191,12 +192,12 @@ impl Tet {
             }
 
             generic::move_cursor(
-                points[i].x_width() as u16,
-                y as u16
+                points[i].x_width() as u16 + board.get_offset_x(),
+                y as u16 + board.get_offset_y()
             );
 
             if remove {
-                print!(". ");
+                print!("  ");
             } else {
                 print!("[]");
             }
@@ -208,20 +209,20 @@ impl Tet {
     /// Translate if there's no collision
     ///
     /// Returns true on success or false if unable to move
-    pub fn translate(&mut self, x: i16, y: i16, occupied: &Vec<Point>) -> bool {
-        if generic::collision_check(self.points_pos(), &occupied, x, y) {
+    pub fn translate(&mut self, x: i16, y: i16, occupied: &Vec<Point>, board: &Board) -> bool {
+        if generic::collision_check(self.points_pos(), &occupied, x, y, board) {
             return false;
         }
 
-        self.print(true);
+        self.print(true, &board);
         self.pos.x += x;
         self.pos.y += y;
-        self.print(false);
+        self.print(false, &board);
 
         return true;
     }
 
-    pub fn rotate(&mut self, occupied: &Vec<Point>) {
+    pub fn rotate(&mut self, occupied: &Vec<Point>, board: &Board) {
         if self.allowed_flips == 0 {
             return;
         }
@@ -242,13 +243,13 @@ impl Tet {
         let mut success = false;
         for y in 0..=2 {
             for x in 0..=2 {
-                if !generic::collision_check(clone.points_pos(), occupied, x, -y) {
+                if !generic::collision_check(clone.points_pos(), occupied, x, -y, board) {
                     clone.pos.x += x;
                     success = true;
                     break;
                 }
 
-                if !generic::collision_check(clone.points_pos(), occupied, -x, -y) {
+                if !generic::collision_check(clone.points_pos(), occupied, -x, -y, board) {
                     clone.pos.x -= x;
                     success = true;
                     break;
@@ -267,7 +268,7 @@ impl Tet {
         }
 
         // Update and print `self`
-        self.print(true);
+        self.print(true, &board);
         if !reset_flip {
             self.flips += 1;
         } else {
@@ -276,7 +277,7 @@ impl Tet {
         self.model = clone.model;
         self.pivot = clone.pivot;
         self.pos = clone.pos;
-        self.print(false);
+        self.print(false, &board);
     }
 
     fn rotate_model(&mut self, clockwise: bool) {

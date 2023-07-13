@@ -3,11 +3,13 @@ use crossterm::event::{poll, Event, KeyEvent, KeyCode, KeyModifiers, KeyEventKin
 use tet::Tet;
 use point::Point;
 use input::Input;
+use board::Board;
 
 mod generic;
 mod tet;
 mod point;
 mod input;
+mod board;
 
 fn main() {
     // Required for running EXE directly
@@ -15,8 +17,10 @@ fn main() {
     let mut buf = String::new();
     stdin().read_line(&mut buf).unwrap();
 
+    let board = Board::new();
+
     loop {
-        setup();
+        setup(&board);
 
         let mut input = Input::new();
         let mut occupied: Vec<Point> = Vec::new();
@@ -33,7 +37,7 @@ fn main() {
         loop {
             // Auto fall
             if time.elapsed().unwrap().as_secs() >= 1 {
-                if !move_tet_down(&mut tet, &mut occupied, &mut score) {
+                if !move_tet_down(&mut tet, &mut occupied, &mut score, &board) {
                     break;
                 }
                 time = SystemTime::now();
@@ -43,15 +47,15 @@ fn main() {
             input.capture_input();
 
             if input.key_down(KeyCode::Left) && input_memory[0].allowed() {
-                tet.translate(-1, 0, &occupied);
+                tet.translate(-1, 0, &occupied, &board);
                 input_memory[0].set_time();
             }
             if input.key_down(KeyCode::Right) && input_memory[1].allowed() {
-                tet.translate(1, 0, &occupied);
+                tet.translate(1, 0, &occupied, &board);
                 input_memory[1].set_time();
             }
             if input.key_down(KeyCode::Down) && input_memory[2].allowed() {
-                if !move_tet_down(&mut tet, &mut occupied, &mut score) {
+                if !move_tet_down(&mut tet, &mut occupied, &mut score, &board) {
                     break;
                 }
                 time = SystemTime::now();
@@ -59,7 +63,7 @@ fn main() {
             }
 
             if input.key_pressed(KeyCode::Up) {
-                tet.rotate(&occupied);
+                tet.rotate(&occupied, &board);
             }
 
             for mem in &mut input_memory {
@@ -68,11 +72,11 @@ fn main() {
         }
 
         // Game over
-        generic::move_cursor(25, 10);
+        generic::move_cursor(28, 10);
         println!("Game over");
-        generic::move_cursor(25, 11);
+        generic::move_cursor(28, 11);
         println!("Press ENTER to try again,");
-        generic::move_cursor(25, 12);
+        generic::move_cursor(28, 12);
         println!("or ESC to quit");
 
         loop {
@@ -91,10 +95,11 @@ fn main() {
     }
 }
 
-fn setup() {
+fn setup(board: &Board) {
     generic::hide_cursor();
     generic::clear_terminal();
-    generic::clear_board();
+    board.draw_frame();
+    board.clear_board();
 }
 
 fn update_score(cleared_rows: u8, score: &mut u32) {
@@ -103,20 +108,20 @@ fn update_score(cleared_rows: u8, score: &mut u32) {
 }
 
 fn print_score(score: u32) {
-    generic::move_cursor(25, 2);
+    generic::move_cursor(28, 2);
     println!("Score: {:?}", score);
 }
 
 /// Move tet down
 ///
 /// Returns false if unable to place, otherwise true
-fn move_tet_down(tet: &mut Tet, occupied: &mut Vec<Point>, score: &mut u32) -> bool {
-    if !tet.translate(0, 1, &occupied) {
+fn move_tet_down(tet: &mut Tet, occupied: &mut Vec<Point>, score: &mut u32, board: &Board) -> bool {
+    if !tet.translate(0, 1, &occupied, &board) {
         if !tet.place(&mut *occupied) {
             return false;
         }
 
-        let cleared_rows = clear_full_rows(&mut *occupied);
+        let cleared_rows = clear_full_rows(&mut *occupied, &board);
         update_score(cleared_rows, &mut *score);
         *tet = Tet::new_random();
     }
@@ -127,14 +132,14 @@ fn move_tet_down(tet: &mut Tet, occupied: &mut Vec<Point>, score: &mut u32) -> b
 /// Clear rows that span entire width of board
 ///
 /// Returns cleared row count
-fn clear_full_rows(occupied: &mut Vec<Point>) -> u8 {
-    let rows = get_row_count(occupied);
+fn clear_full_rows(occupied: &mut Vec<Point>, board: &Board) -> u8 {
+    let rows = get_row_count(occupied, board);
 
     // Which rows should move down, and how far
-    let mut move_down_arr: [u8; generic::H as usize] = [0; generic::H as usize];
+    let mut move_down_arr: Vec<u8> = vec![0; board.get_height() as usize];
     let mut cleared_rows: u8 = 0;
     for i in (0..move_down_arr.len()).rev() {
-        if rows[i] == generic::W {
+        if rows[i] == board.get_width() {
             cleared_rows += 1;
         } else {
             move_down_arr[i] = cleared_rows;
@@ -150,7 +155,7 @@ fn clear_full_rows(occupied: &mut Vec<Point>) -> u8 {
     let mut indexes_to_remove: Vec<usize> = Vec::new();
     for i in 0..occupied.len() {
         // NOTE: Panics if Y is negative (which it is when Tet spawns)
-        if rows[occupied[i].y as usize] == generic::W {
+        if rows[occupied[i].y as usize] == board.get_width() {
             indexes_to_remove.push(i);
         } else {
             occupied[i].y += move_down_arr[occupied[i].y as usize] as i16;
@@ -163,14 +168,14 @@ fn clear_full_rows(occupied: &mut Vec<Point>) -> u8 {
     }
 
     // Print updates
-    print_occupied(occupied);
+    print_occupied(occupied, board);
 
     cleared_rows
 }
 
 /// Get all rows with count of occupied spaces
-fn get_row_count(occupied: &Vec<Point>) -> [u16; generic::H as usize] {
-    let mut rows: [u16; generic::H as usize] = [0; generic::H as usize];
+fn get_row_count(occupied: &Vec<Point>, board: &Board) -> Vec<u16> {
+    let mut rows: Vec<u16> = vec![0; board.get_height() as usize];
 
     for occ in occupied {
         // NOTE: Panics if Y is negative (which it is when Tet spawns)
@@ -182,11 +187,11 @@ fn get_row_count(occupied: &Vec<Point>) -> [u16; generic::H as usize] {
 }
 
 /// Clear board and print occupied points
-fn print_occupied(occupied: &Vec<Point>) {
-    generic::clear_board();
+fn print_occupied(occupied: &Vec<Point>, board: &Board) {
+    board.clear_board();
 
     for occ in occupied {
-        generic::move_cursor(occ.x_width() as u16, occ.y as u16);
+        generic::move_cursor(occ.x_width() as u16 + board.get_offset_x(), occ.y as u16 + board.get_offset_y());
         print!("[]");
     }
 
