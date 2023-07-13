@@ -69,11 +69,11 @@ fn main() {
         }
 
         // Game over
-        generic::move_cursor(15, 10);
+        generic::move_cursor(25, 10);
         println!("Game over");
-        generic::move_cursor(15, 11);
+        generic::move_cursor(25, 11);
         println!("Press ENTER to try again,");
-        generic::move_cursor(15, 12);
+        generic::move_cursor(25, 12);
         println!("or ESC to quit");
 
         loop {
@@ -104,7 +104,7 @@ fn update_score(cleared_rows: u8, score: &mut u32) {
 }
 
 fn print_score(score: u32) {
-    generic::move_cursor(15, 2);
+    generic::move_cursor(25, 2);
     println!("Score: {:?}", score);
 }
 
@@ -187,8 +187,8 @@ fn print_occupied(occupied: &Vec<Point>) {
     generic::clear_board();
 
     for occ in occupied {
-        generic::move_cursor(occ.x as u16, occ.y as u16);
-        print!("■");
+        generic::move_cursor(occ.x_width() as u16, occ.y as u16);
+        print!("[]");
     }
 
     generic::move_cursor(0, 0);

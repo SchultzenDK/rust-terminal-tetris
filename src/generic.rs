@@ -1,6 +1,6 @@
 use std::io::stdout;
 use crossterm::{cursor, terminal, Command, ExecutableCommand};
-use crate::point::Point;
+use crate::point::{Point, self};
 
 pub const H:u16 = 20;
 pub const W:u16 = 10;
@@ -53,8 +53,8 @@ pub fn clear_board() {
 
     for y in 0..H {
         for x in 0..W {
-            move_cursor(x, y);
-            print!(".");
+            move_cursor(x * point::X_WIDTH as u16, y);
+            print!(". ");
         }
     }
 

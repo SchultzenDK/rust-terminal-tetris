@@ -191,14 +191,14 @@ impl Tet {
             }
 
             generic::move_cursor(
-                points[i].x as u16,
+                points[i].x_width() as u16,
                 y as u16
             );
 
             if remove {
-                print!(".");
+                print!(". ");
             } else {
-                print!("■");
+                print!("[]");
             }
 
             generic::move_cursor(0, 0);
