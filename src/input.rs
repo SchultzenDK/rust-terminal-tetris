@@ -3,10 +3,8 @@ use crossterm::event::{Event, KeyCode, KeyEvent, KeyEventKind};
 
 pub struct Input {
     // TODO: maybe make a key struct
-    // TODO: maybe remove `released` if you're not going to use it
     down: Vec<KeyCode>,
     pressed: Vec<KeyCode>,
-    released: Vec<KeyCode>,
 }
 
 impl Input {
@@ -14,7 +12,6 @@ impl Input {
         Input {
             down: Vec::new(),
             pressed: Vec::new(),
-            released: Vec::new(),
         }
     }
 
@@ -22,58 +19,64 @@ impl Input {
     ///
     /// Must be run every cycle, or input won't be read as expected
     pub fn capture_input(&mut self) {
-        self.released.clear();
         self.pressed.clear();
-        if crossterm::event::poll(Duration::from_secs(0)).unwrap() {
-            if let Event::Key(KeyEvent { code, modifiers: _, kind, .. }) = crossterm::event::read().unwrap() {
-                if kind == KeyEventKind::Release {
-                    self.released.push(code);
-                    let down_index = self.get_down_index(code);
-                    if down_index > -1 {
-                        self.down.remove(down_index as usize);
-                    }
-                } else if kind == KeyEventKind::Press && self.get_down_index(code) == -1 {
-                    self.pressed.push(code);
-                    self.down.push(code);
-                }
-            }
+        if !crossterm::event::poll(Duration::from_secs(0)).unwrap() {
+            return
+        }
+
+        if let Event::Key(KeyEvent { code, modifiers: _, kind, .. }) = crossterm::event::read().unwrap() {
+            self.handle_key_event(code, kind);
         }
     }
 
     pub fn key_down(&self, code: KeyCode) -> bool {
-        self.get_down_index(code) > -1
+        self.get_down_index(code).is_ok()
     }
 
     pub fn key_pressed(&self, code: KeyCode) -> bool {
-        self.get_pressed_index(code) > -1
+        self.get_pressed_index(code).is_ok()
     }
 
-    // pub fn key_released(&self, code: KeyCode) -> bool {
-    //     self.get_released_index(code) > -1
-    // }
+    fn handle_key_event(&mut self, code: KeyCode, kind: KeyEventKind) {
+        if kind == KeyEventKind::Release {
+            self.handle_key_event_release(code);
+        } else if kind == KeyEventKind::Press {
+            self.handle_key_event_press(code);
+        }
+    }
+
+    fn handle_key_event_release(&mut self, code: KeyCode) {
+        let down_index_result = self.get_down_index(code);
+        if let Ok(index) = down_index_result {
+            self.down.remove(index);
+        }
+    }
+
+    fn handle_key_event_press(&mut self, code: KeyCode) {
+        if self.get_down_index(code).is_ok() {
+            return
+        }
+
+        self.pressed.push(code);
+        self.down.push(code);
+    }
 
     /// Get index of `code` in `key_vec`
-    ///
-    /// Returns -1 on no index
-    fn get_key_index(key_vec: &Vec<KeyCode>, code: KeyCode) -> isize {
+    fn get_key_index(key_vec: &Vec<KeyCode>, code: KeyCode) -> Result<usize, usize> {
         for i in 0..key_vec.len() {
             if key_vec[i] == code {
-                return i as isize;
+                return Ok(i);
             }
         }
 
-        -1
+        Err(0)
     }
 
-    fn get_down_index(&self, code: KeyCode) -> isize {
+    fn get_down_index(&self, code: KeyCode) -> Result<usize, usize> {
         Input::get_key_index(&self.down, code)
     }
 
-    fn get_pressed_index(&self, code: KeyCode) -> isize {
+    fn get_pressed_index(&self, code: KeyCode) -> Result<usize, usize> {
         Input::get_key_index(&self.pressed, code)
     }
-
-    // fn get_released_index(&self, code: KeyCode) -> isize {
-    //     Input::get_key_index(&self.released, code)
-    // }
 }
