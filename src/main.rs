@@ -15,11 +15,10 @@ fn main() {
     let mut buf = String::new();
     stdin().read_line(&mut buf).unwrap();
 
-    let mut input = Input::new();
-
     loop {
         setup();
 
+        let mut input = Input::new();
         let mut occupied: Vec<Point> = Vec::new();
         let mut tet = Tet::new_random();
         let mut time = SystemTime::now();
