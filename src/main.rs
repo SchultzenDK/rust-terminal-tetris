@@ -4,12 +4,14 @@ use tet::Tet;
 use point::Point;
 use input::Input;
 use board::Board;
+use input_mem::InputMem;
 
 mod generic;
 mod tet;
 mod point;
 mod input;
 mod board;
+mod input_mem;
 
 fn main() {
     // Required for running EXE directly
@@ -196,32 +198,4 @@ fn print_occupied(occupied: &Vec<Point>, board: &Board) {
     }
 
     generic::move_cursor(0, 0);
-}
-
-struct InputMem {
-    code: KeyCode,
-    time: SystemTime,
-    released: bool,
-}
-
-impl InputMem {
-    fn new(code: KeyCode) -> InputMem {
-        InputMem {
-            code,
-            time: SystemTime::now(),
-            released: true,
-        }
-    }
-
-    fn allowed(&self) -> bool {
-        self.released || self.time.elapsed().unwrap().as_millis() > 100
-    }
-
-    fn set_time(&mut self) {
-        self.time = SystemTime::now();
-    }
-
-    fn set_released(&mut self, input: &Input) {
-        self.released = !input.key_down(self.code);
-    }
 }
