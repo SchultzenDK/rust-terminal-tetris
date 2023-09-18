@@ -1,8 +1,5 @@
 use rand::Rng;
-
-use crate::board::Board;
-use crate::generic;
-use crate::point::Point;
+use crate::{point::Point, generic, game_controller::GameController, board::Board};
 
 pub struct Tet {
     pub pos: Point,
@@ -209,20 +206,20 @@ impl Tet {
     /// Translate if there's no collision
     ///
     /// Returns true on success or false if unable to move
-    pub fn translate(&mut self, x: i16, y: i16, occupied: &Vec<Point>, board: &Board) -> bool {
-        if generic::collision_check(self.points_pos(), &occupied, x, y, board) {
+    pub fn translate(&mut self, x: i16, y: i16, game_controller: &GameController) -> bool {
+        if game_controller.collision_check(self.points_pos(), x, y) {
             return false;
         }
 
-        self.print(true, &board);
+        self.print(true, &game_controller.board);
         self.pos.x += x;
         self.pos.y += y;
-        self.print(false, &board);
+        self.print(false, &game_controller.board);
 
         return true;
     }
 
-    pub fn rotate(&mut self, occupied: &Vec<Point>, board: &Board) {
+    pub fn rotate(&mut self, game_controller: &GameController) {
         if self.allowed_flips == 0 {
             return;
         }
@@ -243,13 +240,13 @@ impl Tet {
         let mut success = false;
         for y in 0..=2 {
             for x in 0..=2 {
-                if !generic::collision_check(clone.points_pos(), occupied, x, -y, board) {
+                if !game_controller.collision_check(clone.points_pos(), x, -y) {
                     clone.pos.x += x;
                     success = true;
                     break;
                 }
 
-                if !generic::collision_check(clone.points_pos(), occupied, -x, -y, board) {
+                if !game_controller.collision_check(clone.points_pos(), -x, -y) {
                     clone.pos.x -= x;
                     success = true;
                     break;
@@ -268,7 +265,7 @@ impl Tet {
         }
 
         // Update and print `self`
-        self.print(true, &board);
+        self.print(true, &game_controller.board);
         if !reset_flip {
             self.flips += 1;
         } else {
@@ -277,7 +274,24 @@ impl Tet {
         self.model = clone.model;
         self.pivot = clone.pivot;
         self.pos = clone.pos;
-        self.print(false, &board);
+        self.print(false, &game_controller.board);
+    }
+
+    /// Move tet down and place if able
+    ///
+    /// If unable to place or move, return false, otherwise return true
+    pub fn move_down(&mut self, game_controller: &mut GameController) -> bool {
+        if !self.translate(0, 1, &game_controller) {
+            if !self.place(&mut game_controller.occupied) {
+                return false;
+            }
+
+            game_controller.place_tet();
+
+            *self = Tet::new_random();
+        }
+
+        return true;
     }
 
     fn rotate_model(&mut self, clockwise: bool) {
