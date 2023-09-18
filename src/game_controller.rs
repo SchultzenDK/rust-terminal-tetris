@@ -1,12 +1,9 @@
 use std::{time::SystemTime, io::stdin};
-use crossterm::event::KeyCode;
-use crate::{input::Input, point::Point, input_mem::InputMem, board::Board, generic};
+use crate::{point::Point, board::Board, generic};
 
 pub struct GameController {
-    pub input: Input,
     pub occupied: Vec<Point>,
     pub time: SystemTime,
-    input_memory: [InputMem; 3], // TODO: Refactor to vec
     pub score: u32,
     pub board: Board,
 }
@@ -21,40 +18,16 @@ impl GameController {
         stdin().read_line(&mut buf).unwrap();
 
         GameController {
-            input: Input::new(),
             occupied: Vec::new(),
             time: SystemTime::now(),
-            input_memory: [
-                InputMem::new(KeyCode::Left),
-                InputMem::new(KeyCode::Right),
-                InputMem::new(KeyCode::Down)
-            ],
             score: 0,
             board: Board::new(),
         }
     }
 
-    /// Call every cycle
-    pub fn update(&mut self) {
-        self.input.capture_input();
-    }
-
-    /// Call at end of every cyle
-    pub fn end_update(&mut self) {
-        for mem in &mut self.input_memory {
-            mem.set_released(&self.input);
-        }
-    }
-
     pub fn reset(&mut self) {
-        self.input = Input::new();
         self.occupied = Vec::new();
         self.time = SystemTime::now();
-        self.input_memory = [
-            InputMem::new(KeyCode::Left),
-            InputMem::new(KeyCode::Right),
-            InputMem::new(KeyCode::Down)
-        ];
         self.score = 0;
 
         generic::clear_terminal();
@@ -72,27 +45,6 @@ impl GameController {
         }
 
         should_fall
-    }
-
-    // TODO: Refactor into input_controller module
-    pub fn key_down(&mut self, code: KeyCode) -> bool {
-        let index: usize = match code {
-            KeyCode::Left => 0,
-            KeyCode::Right => 1,
-            KeyCode::Down => 2,
-            _ => 255
-        };
-
-        if index == 255 {
-            return false;
-        }
-
-        let down = self.input.key_down(code) && self.input_memory[index].allowed();
-        if down {
-            self.input_memory[index].set_time();
-        }
-
-        down
     }
 
     pub fn place_tet(&mut self) {
