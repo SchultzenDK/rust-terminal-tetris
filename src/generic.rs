@@ -20,6 +20,10 @@ pub fn clear_terminal() {
     term_command(terminal::Clear(terminal::ClearType::All));
 }
 
-pub fn hide_cursor() {
-    term_command(cursor::Hide);
+pub fn hide_cursor(hide: bool) {
+    if hide {
+        term_command(cursor::Hide);
+    } else {
+        term_command(cursor::Show);
+    }
 }

@@ -1,5 +1,6 @@
 use std::{time::SystemTime, io::stdin};
-use crate::{point::Point, board::Board, generic};
+use crossterm::event::KeyCode;
+use crate::{point::Point, board::Board, generic, input_controller::InputController};
 
 pub struct GameController {
     pub occupied: Vec<Point>,
@@ -10,7 +11,7 @@ pub struct GameController {
 
 impl GameController {
     pub fn new() -> GameController {
-        generic::hide_cursor();
+        generic::hide_cursor(true);
 
         // Required for running EXE directly
         println!("Press enter to start");
@@ -120,6 +121,31 @@ impl GameController {
         }
 
         return false;
+    }
+
+    /// Display game over message and restart or quit options
+    ///
+    /// Returns true on quit or false on restart
+    pub fn game_over(input_controller: &mut InputController) -> bool {
+        // Game over
+        generic::move_cursor(28, 10);
+        println!("Game over");
+        generic::move_cursor(28, 11);
+        println!("Press ENTER to try again,");
+        generic::move_cursor(28, 12);
+        println!("or ESC to quit");
+
+        loop {
+            input_controller.update();
+            if input_controller.key_pressed(KeyCode::Enter) {
+                return false;
+            } else if input_controller.key_pressed(KeyCode::Esc) {
+                generic::clear_terminal();
+                generic::move_cursor(0, 0);
+                generic::hide_cursor(false);
+                return true;
+            }
+        }
     }
 
     /// Get all rows with count of occupied spaces

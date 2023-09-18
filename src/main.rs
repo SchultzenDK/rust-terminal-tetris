@@ -1,5 +1,5 @@
-use std::time::{SystemTime, Duration};
-use crossterm::event::{poll, Event, KeyEvent, KeyCode, KeyModifiers, KeyEventKind};
+use std::time::SystemTime;
+use crossterm::event::KeyCode;
 use crate::{tet::Tet, game_controller::GameController, input_controller::InputController};
 
 mod generic;
@@ -51,26 +51,8 @@ fn main() {
             input_controller.end_update();
         }
 
-        // Game over
-        generic::move_cursor(28, 10);
-        println!("Game over");
-        generic::move_cursor(28, 11);
-        println!("Press ENTER to try again,");
-        generic::move_cursor(28, 12);
-        println!("or ESC to quit");
-
-        loop {
-            if poll(Duration::from_secs(0)).unwrap() {
-                let event = crossterm::event::read().unwrap();
-
-                if event == Event::Key(KeyEvent::new_with_kind(KeyCode::Enter, KeyModifiers::NONE, KeyEventKind::Press)) {
-                    break;
-                } else if event == Event::Key(KeyEvent::new_with_kind(KeyCode::Esc, KeyModifiers::NONE, KeyEventKind::Press)) {
-                    generic::clear_terminal();
-                    generic::move_cursor(0, 0);
-                    return;
-                }
-            }
+        if GameController::game_over(&mut input_controller) {
+            break;
         }
     }
 }
