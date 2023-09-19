@@ -1,4 +1,4 @@
-use std::time::SystemTime;
+use std::io::stdin;
 use crossterm::event::KeyCode;
 use crate::{tet::Tet, game_controller::GameController, input_controller::InputController};
 
@@ -12,13 +12,11 @@ mod game_controller;
 mod input_controller;
 
 fn main() {
-    // TODO: Figure out if I wanna keep GameController, or if I should make main have all that shit
-    let mut game_controller = GameController::new();
+    init();
 
     loop {
+        let mut game_controller = GameController::new();
         let mut input_controller = InputController::new();
-
-        game_controller.reset();
         let mut tet = Tet::new_random();
 
         loop {
@@ -41,7 +39,7 @@ fn main() {
                 if !tet.move_down(&mut game_controller) {
                     break;
                 }
-                game_controller.time = SystemTime::now();
+                game_controller.reset_time();
             }
 
             if input_controller.key_pressed(KeyCode::Up) {
@@ -55,4 +53,13 @@ fn main() {
             break;
         }
     }
+}
+
+fn init() {
+    generic::hide_cursor(true);
+
+    // Required for running EXE directly
+    println!("Press enter to start");
+    let mut buf = String::new();
+    stdin().read_line(&mut buf).unwrap();
 }

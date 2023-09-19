@@ -1,46 +1,49 @@
-use std::{time::SystemTime, io::stdin};
+use std::time::SystemTime;
 use crossterm::event::KeyCode;
 use crate::{point::Point, board::Board, generic, input_controller::InputController};
 
+const LEVEL_SCALE: u8 = 5;
+const LEVEL_AT_SCORE: u16 = 150;
+const INITIAL_FALL_MS: u16 = 750;
+
 pub struct GameController {
     pub occupied: Vec<Point>,
-    pub time: SystemTime,
-    pub score: u32,
+    time: SystemTime,
+    score: u32,
     pub board: Board,
+    level: u32,
+    fall_ms: u16,
 }
 
 impl GameController {
     pub fn new() -> GameController {
-        generic::hide_cursor(true);
+        generic::clear_terminal();
 
-        // Required for running EXE directly
-        println!("Press enter to start");
-        let mut buf = String::new();
-        stdin().read_line(&mut buf).unwrap();
-
-        GameController {
+        let this = GameController {
             occupied: Vec::new(),
             time: SystemTime::now(),
             score: 0,
             board: Board::new(),
-        }
+            level: 1,
+            fall_ms: INITIAL_FALL_MS,
+        };
+
+        this.board.draw_frame();
+        this.board.clear_board();
+        this.print_score();
+        this.print_level();
+
+        this
     }
 
-    pub fn reset(&mut self) {
-        self.occupied = Vec::new();
+    pub fn reset_time(&mut self) {
         self.time = SystemTime::now();
-        self.score = 0;
-
-        generic::clear_terminal();
-        self.board.draw_frame();
-        self.board.clear_board();
-        self.print_score();
     }
 
     /// Return if tet should autofall
     /// Reset time if true
     pub fn should_autofall(&mut self) -> bool {
-        let should_fall = self.get_time_elapsed() >= 1000;
+        let should_fall = self.get_time_elapsed() >= self.fall_ms as u128;
         if should_fall {
             self.time = SystemTime::now();
         }
@@ -51,17 +54,33 @@ impl GameController {
     pub fn place_tet(&mut self) {
         let rows = self.clear_full_rows();
         self.update_score(rows as u32);
+        self.update_level();
     }
 
-    pub fn update_score(&mut self, cleared_rows: u32) {
+    fn set_fall_ms(&mut self) {
+        if self.level == 1 {
+            return;
+        }
+
+        let level = self.level - 1;
+        self.fall_ms = (INITIAL_FALL_MS as f32 / (1_f32 + level as f32 / LEVEL_SCALE as f32)).floor() as u16;
+    }
+
+    fn update_score(&mut self, cleared_rows: u32) {
         self.score += 3_u32.pow(cleared_rows + 1);
         self.print_score();
+    }
+
+    fn update_level(&mut self) {
+        self.level = (self.score as f32 / LEVEL_AT_SCORE as f32).ceil() as u32;
+        self.print_level();
+        self.set_fall_ms();
     }
 
     /// Clear rows that span entire width of board
     ///
     /// Returns cleared row count
-    pub fn clear_full_rows(&mut self) -> u8 {
+    fn clear_full_rows(&mut self) -> u8 {
         let rows = self.get_row_count();
 
         // Which rows should move down, and how far
@@ -175,6 +194,11 @@ impl GameController {
     fn print_score(&self) {
         generic::move_cursor(28, 2);
         println!("Score: {:?}", self.score);
+    }
+
+    fn print_level(&self) {
+        generic::move_cursor(28, 4);
+        println!("Level: {:?}", self.level);
     }
 
     fn get_time_elapsed(&self) -> u128 {
