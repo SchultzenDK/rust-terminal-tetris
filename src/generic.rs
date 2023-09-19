@@ -1,5 +1,5 @@
 use std::io::stdout;
-use crossterm::{cursor, terminal, Command, ExecutableCommand};
+use crossterm::{cursor, terminal, Command, ExecutableCommand, style::{Color, SetForegroundColor}};
 
 pub fn term_command(command: impl Command) {
     stdout().execute(command).unwrap();
@@ -26,4 +26,8 @@ pub fn hide_cursor(hide: bool) {
     } else {
         term_command(cursor::Show);
     }
+}
+
+pub fn set_color(color: Color) {
+    term_command(SetForegroundColor(color));
 }

@@ -1,3 +1,4 @@
+use crossterm::style::Color;
 use rand::Rng;
 use crate::{point::Point, generic, game_controller::GameController, board::Board};
 
@@ -5,6 +6,7 @@ pub struct Tet {
     pub pos: Point,
     pivot: Point,
     model: [Point; 4],
+    color: Color,
     allowed_flips: u8,
     flips: u8,
     rotate_clockwise: bool,
@@ -21,6 +23,7 @@ impl Tet {
                 Point::new(0, 2),
                 Point::new(0, 3),
             ],
+            color: Color::Blue,
             allowed_flips: 1,
             flips: 0,
             rotate_clockwise: true,
@@ -37,6 +40,7 @@ impl Tet {
                 Point::new(0, 2),
                 Point::new(1, 2),
             ],
+            color: Color::Red,
             allowed_flips: 3,
             flips: 0,
             rotate_clockwise: true,
@@ -53,6 +57,7 @@ impl Tet {
                 Point::new(0, 2),
                 Point::new(-1, 2),
             ],
+            color: Color::Green,
             allowed_flips: 3,
             flips: 0,
             rotate_clockwise: true,
@@ -69,6 +74,7 @@ impl Tet {
                 Point::new(1, 1),
                 Point::new(2, 0),
             ],
+            color: Color::Yellow,
             allowed_flips: 3,
             flips: 0,
             rotate_clockwise: true,
@@ -85,6 +91,7 @@ impl Tet {
                 Point::new(0, 1),
                 Point::new(1, 1),
             ],
+            color: Color::Magenta,
             allowed_flips: 0,
             flips: 0,
             rotate_clockwise: true,
@@ -101,6 +108,7 @@ impl Tet {
                 Point::new(1, 0),
                 Point::new(2, 0),
             ],
+            color: Color::Cyan,
             allowed_flips: 1,
             flips: 0,
             rotate_clockwise: false,
@@ -117,6 +125,7 @@ impl Tet {
                 Point::new(1, 0),
                 Point::new(0, 0),
             ],
+            color: Color::DarkYellow,
             allowed_flips: 1,
             flips: 0,
             rotate_clockwise: true,
@@ -139,21 +148,25 @@ impl Tet {
     /// Get board position of individual points in model
     pub fn points_pos(&self) -> [Point; 4] {
         return [
-            Point::new(
+            Point::new_with_color(
                 self.pos.x - self.pivot.x + self.model[0].x,
-                self.pos.y - self.pivot.y + self.model[0].y
+                self.pos.y - self.pivot.y + self.model[0].y,
+                self.color,
             ),
-            Point::new(
+            Point::new_with_color(
                 self.pos.x - self.pivot.x + self.model[1].x,
                 self.pos.y - self.pivot.y + self.model[1].y,
+                self.color,
             ),
-            Point::new(
+            Point::new_with_color(
                 self.pos.x - self.pivot.x + self.model[2].x,
                 self.pos.y - self.pivot.y + self.model[2].y,
+                self.color,
             ),
-            Point::new(
+            Point::new_with_color(
                 self.pos.x - self.pivot.x + self.model[3].x,
                 self.pos.y - self.pivot.y + self.model[3].y,
+                self.color,
             ),
         ];
     }
@@ -181,6 +194,8 @@ impl Tet {
     }
 
     pub fn print(&self, remove: bool, board: &Board) {
+        generic::set_color(self.color);
+
         let points = self.points_pos();
         for i in 0..=3 {
             let y: i16 = points[i].y;
@@ -201,6 +216,8 @@ impl Tet {
 
             generic::move_cursor(0, 0);
         }
+
+        generic::set_color(Color::Reset);
     }
 
     /// Translate if there's no collision

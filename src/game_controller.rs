@@ -1,5 +1,5 @@
 use std::time::SystemTime;
-use crossterm::event::KeyCode;
+use crossterm::{event::KeyCode, style::Color};
 use crate::{point::Point, board::Board, generic, input_controller::InputController};
 
 const LEVEL_SCALE: u8 = 5;
@@ -184,10 +184,12 @@ impl GameController {
         self.board.clear_board();
 
         for occ in &self.occupied {
+            generic::set_color(occ.color);
             generic::move_cursor(occ.x_width() as u16 + self.board.get_offset_x(), occ.y as u16 + self.board.get_offset_y());
             print!("[]");
         }
 
+        generic::set_color(Color::Reset);
         generic::move_cursor(0, 0);
     }
 
