@@ -3,6 +3,7 @@ use crossterm::event::{Event, KeyCode, KeyEvent, KeyEventKind};
 
 pub struct Input {
     // TODO: maybe make a key struct
+    // TODO: Rewrite `pressed`, because it doesn't work as expected with Enter or chars
     down: Vec<KeyCode>,
     pressed: Vec<KeyCode>,
 }

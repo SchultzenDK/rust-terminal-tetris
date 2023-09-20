@@ -142,27 +142,18 @@ impl GameController {
         return false;
     }
 
-    /// Display game over message and restart or quit options
-    ///
-    /// Returns true on quit or false on restart
-    pub fn game_over(input_controller: &mut InputController) -> bool {
-        // Game over
+    /// Display game over message and return on enter
+    pub fn game_over(input_controller: &mut InputController) {
         generic::move_cursor(28, 10);
         println!("Game over");
         generic::move_cursor(28, 11);
-        println!("Press ENTER to try again,");
-        generic::move_cursor(28, 12);
-        println!("or ESC to quit");
+        println!("Press ENTER to return");
 
         loop {
             input_controller.update();
             if input_controller.key_pressed(KeyCode::Enter) {
-                return false;
-            } else if input_controller.key_pressed(KeyCode::Esc) {
                 generic::clear_terminal();
-                generic::move_cursor(0, 0);
-                generic::hide_cursor(false);
-                return true;
+                return;
             }
         }
     }
