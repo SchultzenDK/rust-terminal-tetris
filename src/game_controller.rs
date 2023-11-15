@@ -1,6 +1,6 @@
 use std::time::SystemTime;
 use crossterm::{event::KeyCode, style::Color};
-use crate::{point::Point, board::Board, generic, input_controller::InputController};
+use crate::{point::Point, board::Board, generic, input_controller::InputController, tet::Tet};
 
 const LEVEL_SCALE: u8 = 5;
 const LEVEL_AT_SCORE: u16 = 150;
@@ -34,6 +34,47 @@ impl GameController {
         this.print_level();
 
         this
+    }
+
+    pub fn game_loop(&mut self, input_controller: &mut InputController) {
+        let mut tet = Tet::new_random();
+
+        loop {
+            input_controller.update();
+
+            if input_controller.key_pressed(KeyCode::Esc) {
+                GameController::game_over(input_controller);
+                return;
+            }
+
+            // Auto fall
+            if self.should_autofall() {
+                if !tet.move_down(self) {
+                    break;
+                }
+            }
+
+            if input_controller.key_hold(KeyCode::Left) {
+                tet.translate(-1, 0, self);
+            }
+            if input_controller.key_hold(KeyCode::Right) {
+                tet.translate(1, 0, self);
+            }
+            if input_controller.key_hold(KeyCode::Down) {
+                if !tet.move_down(self) {
+                    break;
+                }
+                self.reset_time();
+            }
+
+            if input_controller.key_pressed(KeyCode::Up) {
+                tet.rotate(self);
+            }
+
+            input_controller.end_update();
+        }
+
+        GameController::game_over(input_controller);
     }
 
     pub fn reset_time(&mut self) {
@@ -143,7 +184,7 @@ impl GameController {
     }
 
     /// Display game over message and return on enter
-    pub fn game_over(input_controller: &mut InputController) {
+    fn game_over(input_controller: &mut InputController) {
         generic::move_cursor(28, 10);
         println!("Game over");
         generic::move_cursor(28, 11);
