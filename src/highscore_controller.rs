@@ -1,4 +1,4 @@
-use std::{io, fs};
+use std::{io, fs, path::Path};
 
 use crate::{generic, input_controller::InputController};
 
@@ -65,6 +65,10 @@ pub fn write_scores(mut name_scores: Vec<NameScore>) {
 }
 
 pub fn read_scores() -> Vec<NameScore> {
+    if !Path::new(FILE).exists() {
+        return Vec::new();
+    }
+
     if let Ok(name_scores_str) = fs::read_to_string(FILE) {
         let mut name_scores = parse_score_str(&name_scores_str);
         cleanup_scores(&mut name_scores);
