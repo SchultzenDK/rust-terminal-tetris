@@ -53,4 +53,16 @@ impl InputController {
     pub fn key_pressed(&self, code: KeyCode) -> bool {
         self.input.key_pressed(code)
     }
+
+    pub fn wait_for_enter() {
+        let mut input_controller = InputController::new();
+
+        loop {
+            input_controller.update();
+
+            if input_controller.key_pressed(KeyCode::Enter) {
+                return;
+            }
+        }
+    }
 }

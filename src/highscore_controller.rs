@@ -1,25 +1,25 @@
 use std::{io, fs};
 
-use crate::generic;
+use crate::{generic, input_controller::InputController};
 
 const FILE: &str = "scores.txt";
 const MAX_SCORES: usize = 10;
 
-// TODO: Stop blindly using `unwrap()` in this entire controller.
-// It's unsafe, especially when reading from files.
-// Doesn't make it better that it's a simple txt file, anyone can edit.
-
 pub fn input_score(score: u32, cursor_x: u16, cursor_y: u16) {
     generic::move_cursor(cursor_x, cursor_y);
 
-    let mut name_scores = read_scores();
+    if score == 0 {
+        println!("Press ENTER to continue");
+        InputController::wait_for_enter();
+        return;
+    }
 
+    let mut name_scores = read_scores();
     if name_scores.len() == MAX_SCORES {
         let last = name_scores.last().unwrap();
-        if last.score > score {
+        if last.score >= score {
             println!("Press ENTER to continue");
-            let mut _buf = String::new();
-            io::stdin().read_line(&mut _buf).unwrap();
+            InputController::wait_for_enter();
             return;
         }
     }
@@ -59,15 +59,21 @@ pub fn write_scores(mut name_scores: Vec<NameScore>) {
         name_scores_str.push_str(&format!("{}:{};", &name_score.name.trim(), name_score.score));
     }
 
-    fs::write(FILE, name_scores_str).unwrap();
+    if let Err(_) = fs::write(FILE, name_scores_str) {
+        generic::error_print(&format!("Failed to write to score file {}", FILE));
+    }
 }
 
 pub fn read_scores() -> Vec<NameScore> {
     if let Ok(name_scores_str) = fs::read_to_string(FILE) {
-        return parse_score_str(&name_scores_str);
+        let mut name_scores = parse_score_str(&name_scores_str);
+        cleanup_scores(&mut name_scores);
+        return name_scores;
+    } else {
+        generic::error_print(&format!("Failed to read from score file {}", FILE));
     }
 
-    return Vec::new();
+    Vec::new()
 }
 
 pub fn parse_score_str(score_str: &str) -> Vec<NameScore> {
@@ -84,12 +90,23 @@ pub fn parse_score_str(score_str: &str) -> Vec<NameScore> {
 
         let mut split = single_score_str.split(':');
         let name: String = String::from(split.next().unwrap());
-        let score: u32 = split.next().unwrap().parse().unwrap();
+        let score: u32 = split.next().unwrap().parse().unwrap_or(0);
 
         name_scores.push(NameScore { name, score });
     }
 
-    return name_scores;
+    name_scores
+}
+
+pub fn cleanup_scores(name_scores: &mut Vec<NameScore>) {
+    name_scores.retain(|name_score| {
+        name_score.score > 0
+    });
+    sort_scores(name_scores);
+
+    if name_scores.len() > 10 {
+        name_scores.drain(MAX_SCORES..);
+    }
 }
 
 pub fn sort_scores(name_scores: &mut Vec<NameScore>) {

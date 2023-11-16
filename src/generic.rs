@@ -1,6 +1,8 @@
 use std::io::stdout;
 use crossterm::{cursor, terminal, Command, ExecutableCommand, style::{Color, SetForegroundColor}};
 
+use crate::input_controller::InputController;
+
 pub fn term_command(command: impl Command) {
     stdout().execute(command).unwrap();
 }
@@ -14,6 +16,16 @@ pub fn debug_print(y: u16, print: &str) {
     move_cursor(40, y);
     print!("{}", print);
     move_cursor(0, 0);
+}
+
+pub fn error_print(msg: &str) {
+    move_cursor(0, 0);
+    set_color(Color::Red);
+    println!("{}", msg);
+    println!("Press ENTER to continue");
+    set_color(Color::Reset);
+
+    InputController::wait_for_enter();
 }
 
 pub fn clear_terminal() {
