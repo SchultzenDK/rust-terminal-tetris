@@ -1,6 +1,6 @@
 use std::time::SystemTime;
 use crossterm::{event::KeyCode, style::Color};
-use crate::{point::Point, board::Board, generic, input_controller::InputController, tet::Tet};
+use crate::{point::Point, board::Board, generic, input_controller::InputController, tet::Tet, menu_controller, highscore_controller};
 
 const LEVEL_SCALE: u8 = 5;
 const LEVEL_AT_SCORE: u16 = 150;
@@ -43,7 +43,7 @@ impl GameController {
             input_controller.update();
 
             if input_controller.key_pressed(KeyCode::Esc) {
-                GameController::game_over(input_controller);
+                self.game_over(input_controller);
                 return;
             }
 
@@ -74,7 +74,7 @@ impl GameController {
             input_controller.end_update();
         }
 
-        GameController::game_over(input_controller);
+        self.game_over(input_controller);
     }
 
     pub fn reset_time(&mut self) {
@@ -184,19 +184,12 @@ impl GameController {
     }
 
     /// Display game over message and return on enter
-    fn game_over(input_controller: &mut InputController) {
+    fn game_over(&self, input_controller: &mut InputController) {
         generic::move_cursor(28, 10);
         println!("Game over");
-        generic::move_cursor(28, 11);
-        println!("Press ENTER to return");
 
-        loop {
-            input_controller.update();
-            if input_controller.key_pressed(KeyCode::Enter) {
-                generic::clear_terminal();
-                return;
-            }
-        }
+        highscore_controller::input_score(self.score, 28, 12);
+        menu_controller::score_menu_loop(input_controller);
     }
 
     /// Get all rows with count of occupied spaces

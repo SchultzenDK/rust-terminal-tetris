@@ -1,5 +1,4 @@
-use generic::move_cursor;
-use crate::{game_controller::GameController, input_controller::InputController, main_menu_controller::MenuOption};
+use crate::{game_controller::GameController, input_controller::InputController, menu_controller::MenuOption};
 
 mod generic;
 mod tet;
@@ -9,23 +8,20 @@ mod board;
 mod input_mem;
 mod game_controller;
 mod input_controller;
-mod main_menu_controller;
+mod menu_controller;
+mod highscore_controller;
 
 fn main() {
     init();
     let mut input_controller = InputController::new();
 
     loop {
-        let selected_option = main_menu_controller::main_menu_loop(&mut input_controller);
+        let selected_option = menu_controller::main_menu_loop(&mut input_controller);
 
         match selected_option {
             MenuOption::New(_) => new_game(&mut input_controller),
-            MenuOption::Quit(_) => break,
-            _ => {
-                generic::clear_terminal();
-                move_cursor(3, 10);
-                println!("Not available yet");
-            },
+            MenuOption::Score(_) => menu_controller::score_menu_loop(&mut input_controller),
+            MenuOption::Quit(_) => break
         }
     }
 
